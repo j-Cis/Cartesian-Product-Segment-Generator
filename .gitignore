@@ -1,0 +1,11 @@
+Cargo.lock
+/target
+/.vs
+/src/ui/fonts/*
+!/src/ui/fonts/display/
+/src/ui/fonts/display/*
+!/src/ui/fonts/display/RammettoOne-Regular.ttf
+!/src/ui/fonts/code/
+/src/ui/fonts/code/*
+!/src/ui/fonts/code/BlexMonoNerdFont-Bold.ttf
+

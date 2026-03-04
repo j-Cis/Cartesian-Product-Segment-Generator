@@ -1,0 +1,75 @@
+PS A:\A-JAN\git-rust\j-Cis\CPSGen> $PSVersionTable.PSVersion
+
+Major  Minor  Patch  PreReleaseLabel BuildLabel
+-----  -----  -----  --------------- ----------
+7      5      4
+
+PS A:\A-JAN\git-rust\j-Cis\CPSGen> Get-CimInstance Win32_OperatingSystem | Select-Object Caption, Version, BuildNumber
+
+Caption                  Version    BuildNumber
+-------                  -------    -----------
+Microsoft Windows 11 Pro 10.0.26200 26200
+
+PS A:\A-JAN\git-rust\j-Cis\CPSGen> rustc --version
+rustc 1.93.1 (01f6ddf75 2026-02-11)
+PS A:\A-JAN\git-rust\j-Cis\CPSGen> cargo --version
+cargo 1.93.1 (083ac5135 2025-12-15)
+PS A:\A-JAN\git-rust\j-Cis\CPSGen> rustup toolchain list
+stable-x86_64-pc-windows-msvc (active, default)
+nightly-x86_64-pc-windows-msvc
+PS A:\A-JAN\git-rust\j-Cis\CPSGen> rustc +stable --version
+rustc 1.93.1 (01f6ddf75 2026-02-11)
+PS A:\A-JAN\git-rust\j-Cis\CPSGen> rustc +nightly --version
+rustc 1.96.0-nightly (d9563937f 2026-03-03)
+PS A:\A-JAN\git-rust\j-Cis\CPSGen> rustup show
+Default host: x86_64-pc-windows-msvc
+rustup home:  C:\Users\GEPIDEN\.rustup
+
+installed toolchains
+--------------------
+stable-x86_64-pc-windows-msvc (active, default)
+nightly-x86_64-pc-windows-msvc
+
+active toolchain
+----------------
+name: stable-x86_64-pc-windows-msvc
+active because: it's the default toolchain
+installed targets:
+  aarch64-pc-windows-msvc
+  arm64ec-pc-windows-msvc
+  i686-pc-windows-msvc
+  x86_64-pc-windows-msvc
+PS A:\A-JAN\git-rust\j-Cis\CPSGen> Get-ChildItem Env: | Where-Object Name -Match 'CARGO|RUST'
+
+Name                           Value
+----                           -----
+RustRover                      C:\Program Files\JetBrains\RustRover 261.21849.38\bin
+
+PS A:\A-JAN\git-rust\j-Cis\CPSGen> rustc --print sysroot
+C:\Users\GEPIDEN\.rustup\toolchains\stable-x86_64-pc-windows-msvc
+PS A:\A-JAN\git-rust\j-Cis\CPSGen> (Get-Command cargo).Path
+C:\Users\GEPIDEN\.cargo\bin\cargo.exe
+PS A:\A-JAN\git-rust\j-Cis\CPSGen> (Get-Command rustc).Path
+C:\Users\GEPIDEN\.cargo\bin\rustc.exe
+PS A:\A-JAN\git-rust\j-Cis\CPSGen> Test-Path "C:\Program Files\Microsoft Visual Studio\18\Insiders\VC\Tools\MSVC"
+True
+PS A:\A-JAN\git-rust\j-Cis\CPSGen> Test-Path "C:\Program Files (x86)\Windows Kits\10\Include"
+True
+[Environment]::SetEnvironmentVariable("INCLUDE", "C:\Program Files\Microsoft Visual Studio\18\Insiders\VC\Tools\MSVC\14.51.36014\include;C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\ucrt;C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\um;C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\shared", "User")
+[Environment]::SetEnvironmentVariable("LIB", "C:\Program Files\Microsoft Visual Studio\18\Insiders\VC\Tools\MSVC\14.51.36014\lib\x64;C:\Program Files (x86)\Windows Kits\10\Lib\10.0.26100.0\um\x64;C:\Program Files (x86)\Windows Kits\10\Lib\10.0.26100.0\ucrt\x64", "User")
+$oldPath = [Environment]::GetEnvironmentVariable("Path", "User")   
+$newPath = "C:\Program Files\Microsoft Visual Studio\18\Insiders\VC\Tools\MSVC\14.51.36014\bin\Hostx64\x64;" + $oldPath  
+[Environment]::SetEnvironmentVariable("Path", $newPath, "User")     
+PS A:\A-JAN\git-rust\j-Cis\CPSGen>  $env:INCLUDE
+C:\Program Files\Microsoft Visual Studio\18\Insiders\VC\Tools\MSVC\14.51.36014\include;C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\ucrt;C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\um;C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\shared
+PS A:\A-JAN\git-rust\j-Cis\CPSGen> $env:LIB                                                                                                                                                            
+C:\Program Files\Microsoft Visual Studio\18\Insiders\VC\Tools\MSVC\14.51.36014\lib\x64;C:\Program Files (x86)\Windows Kits\10\Lib\10.0.26100.0\um\x64;C:\Program Files (x86)\Windows Kits\10\Lib\10.0.26100.0\ucrt\x64
+PS A:\A-JAN\git-rust\j-Cis\CPSGen> link --version
+Microsoft (R) Incremental Linker Version 14.51.36014.0 (PREVIEW)
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+LINK : warning LNK4044: unrecognized option '/-version'; ignored
+LINK : warning LNK4001: no object files specified; libraries used
+LINK : warning LNK4068: /MACHINE not specified; defaulting to X64
+LINK : fatal error LNK1561: entry point must be defined
+PS A:\A-JAN\git-rust\j-Cis\CPSGen> 

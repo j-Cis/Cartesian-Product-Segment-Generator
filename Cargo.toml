@@ -1,0 +1,42 @@
+[package]
+name = "cartesian-product-segment-generator"
+version = "0.1.3"
+edition = "2024"       # Używana edycja języka Rust (nowoczesne funkcje i resolver)
+rust-version = "1.93.1" # Minimalna wersja kompilatora wymagana do zbudowania projektu
+resolver = "3"         # Sposób, w jaki Cargo rozwiązuje zależności (3 to standard dla edycji 2024)
+
+# ZALEŻNOŚCI GŁÓWNE (Kompilowane do końcowego programu)
+[dependencies]
+# --- Narzędzia ogólne i obsługa błędów ---
+anyhow = "1.0.102"      # Prosta i elastyczna obsługa błędów (typ anyhow::Result)
+itertools = "0.14.0"    # Dodatkowe, potężne metody dla iteratorów (często używane przy generowaniu kombinacji/kartezjańskich)
+regex = "1.12.3"        # Obsługa wyrażeń regularnych do analizy i formatowania tekstu
+
+# --- Interfejs Linii Poleceń (CLI) ---
+clap = { version = "4.5.60", features = ["derive"] } # Potężny parser argumentów z wiersza poleceń
+inquire = "0.9.4"       # Biblioteka do tworzenia interaktywnych promptów/menu w terminalu (pytania, listy wyboru)
+colored = "3.1.1"       # Kolorowanie tekstu w konsoli (żeby komunikaty ładnie wyglądały)
+atty = "0.2.14"         # Sprawdza, czy program działa w prawdziwym terminalu (uwaga: w nowym Rust można użyć std::io::IsTerminal)
+
+# --- Graficzny Interfejs Użytkownika (GUI) ---
+slint = "1.15.1"               # Główna biblioteka frameworka GUI Slint
+i-slint-backend-winit = "1.15.1" # Wewnętrzny backend Slinta oparty na Winit (obsługa okien i wejścia)
+winit = "0.30.13"              # Niskopoziomowa biblioteka do tworzenia okien (używana pod spodem przez Slinta)
+
+# ZALEŻNOŚCI BUDOWANIA (Używane TYLKO przez plik build.rs przed główną kompilacją)
+[build-dependencies]
+slint-build = "1.15.1"  # Kompilator Slinta: tłumaczy pliki .slint na kod Rusta podczas etapu budowania
+
+# KONFIGURACJA BIBLIOTEKI (Jeśli Twój kod jest też używany jako biblioteka)
+[lib]
+name = "cpsgen_lib"
+path = "src/lib/mod.rs" # Wskazuje, gdzie znajduje się główny plik biblioteki
+
+# KONFIGURACJA PLIKÓW WYKONYWALNYCH (Możesz mieć wiele programów w jednym projekcie)
+[[bin]]
+name = "CPSGen"         # Nazwa wynikowego pliku dla wersji w konsoli (np. CPSGen.exe na Windows)
+path = "src/bin/cli.rs" # Kod źródłowy dla wersji CLI
+
+[[bin]]
+name = "CPSGenGUI"      # Nazwa wynikowego pliku dla wersji okienkowej (np. CPSGenGUI.exe)
+path = "src/bin/gui.rs" # Kod źródłowy dla wersji GUI

@@ -1,0 +1,99 @@
+import { Button, ScrollView } from "std-widgets.slint";
+
+export component AppWindow inherits Window {
+    no-frame: true;
+    background: #1c1c1c;
+    preferred-width: 600px;
+    preferred-height: 800px;
+
+    in-out property <string> log-output: "OCZEKIWANIE NA GESTY...\n";
+    in-out property <int> counter: 0;
+
+    callback close-requested();
+
+    VerticalLayout {
+        padding: 10px;
+        spacing: 10px;
+
+        Text { 
+            text: "REJESTRATOR SEKWENCJI"; 
+            font-size: 20px; 
+            color: white; 
+            horizontal-alignment: center;
+        }
+
+        // --- STREFA TESTOWA ---
+        Rectangle {
+            background: #333;
+            height: 150px;
+            border-radius: 10px;
+            border-width: 2px;
+            border-color: #555;
+
+            Text { text: "TU WYKONAJ GESTY"; color: #888; vertical-alignment: center; horizontal-alignment: center; }
+
+            TouchArea {
+                pointer-event(e) => {
+                    root.counter += 1;
+                    
+                    let prefix = "[" + root.counter + "] ";
+                    
+                    // Używamy operatora '?' zamiast 'if', żeby przypisać wartość OD RAZU
+                    let kind = 
+                        e.kind == PointerEventKind.down ? "DOWN" :
+                        e.kind == PointerEventKind.up ? "UP  " :
+                        e.kind == PointerEventKind.move ? "MOVE" : "CNCL";
+
+                    let btn = 
+                        e.button == PointerEventButton.left ? "Left" :
+                        e.button == PointerEventButton.right ? "Rght" :
+                        e.button == PointerEventButton.middle ? "Midl" : "None";
+
+                    let hov = self.has-hover ? "Hov:TAK" : "Hov:NIE";
+
+                    // Zapisujemy do właściwości (property), co jest dozwolone
+                    root.log-output = prefix + kind + " | Btn:" + btn + " | " + hov + "\n" + root.log-output;
+                }
+            }
+        }
+
+        // --- OBSZAR LOGÓW ---
+        Text { text: "HISTORIA ZDARZEŃ:"; color: white; }
+        
+        Rectangle {
+            background: #111;
+            clip: true;
+            vertical-stretch: 1;
+            
+            Text {
+                x: 10px;
+                y: 10px;
+                text: root.log-output;
+                color: #00ff00;
+                font-family: "Courier New";
+                font-size: 14px;
+            }
+        }
+
+        HorizontalLayout {
+            spacing: 10px;
+            height: 40px;
+            
+            Rectangle {
+                horizontal-stretch: 1;
+                background: #444;
+                border-radius: 5px;
+                Text { text: "WYCZYŚĆ LOGI"; color: white; vertical-alignment: center; horizontal-alignment: center; }
+                TouchArea { clicked => { root.log-output = ""; root.counter = 0; } }
+            }
+
+            Rectangle {
+                horizontal-stretch: 1;
+                background: #c42b1c;
+                border-radius: 5px;
+                Text { text: "ZAMKNIJ"; color: white; vertical-alignment: center; horizontal-alignment: center; }
+                TouchArea { clicked => { root.close-requested(); } }
+            }
+        }
+    }
+}

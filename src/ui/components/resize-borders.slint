@@ -1,0 +1,115 @@
+export component ResizeBorders inherits Rectangle {
+    // Callback wysyłający kod kierunku: "n", "s", "e", "w", "ne", "nw", "se", "sw"
+    callback resize(string);
+
+    background: transparent;
+    // Ważne: to musi być na wierzchu, ale przepuszczać kliknięcia w środku
+    width: 100%;
+    height: 100%;
+
+    // Grubość strefy łapania (8px jest wygodne)
+    property <length> border-size: 8px;
+
+    // Funkcja pomocnicza, żeby nie kopiować kodu 8 razy
+    // Sprawdza tylko czy zdarzenie to "Down"
+    // function is-press(e: PointerEvent) -> bool {
+    //     return e.kind == PointerEventKind.down;
+    // }
+
+    // --- BOKI (SIDES) ---
+    
+    // Północ (Góra)
+    TouchArea {
+        width: 100%;
+        height: border-size;
+        y: 0;
+        mouse-cursor: MouseCursor.row-resize;
+        pointer-event(e) => { 
+            // ZMIANA: Używamy uproszczonego warunku
+            if (e.button == PointerEventButton.left && e.kind == PointerEventKind.down) { root.resize("n"); } 
+            // if (root.is-press(e)) { root.resize("n"); }
+        }
+    }
+
+    // Południe (Dół)
+    TouchArea {
+        width: 100%;
+        height: border-size;
+        y: parent.height - self.height;
+        mouse-cursor: MouseCursor.row-resize;
+        pointer-event(e) => { 
+            if (e.button == PointerEventButton.left && e.kind == PointerEventKind.down) { root.resize("s"); } 
+            // if (root.is-press(e)) { root.resize("s"); } 
+        }
+    }
+
+    // Zachód (Lewo)
+    TouchArea {
+        width: border-size;
+        height: 100%;
+        x: 0;
+        mouse-cursor: MouseCursor.col-resize;
+        pointer-event(e) => { 
+            if (e.button == PointerEventButton.left && e.kind == PointerEventKind.down) { root.resize("w"); } 
+            // if (root.is-press(e)) { root.resize("w"); }
+        }
+    }
+
+    // Wschód (Prawo)
+    TouchArea {
+        width: border-size;
+        height: 100%;
+        x: parent.width - self.width;
+        mouse-cursor: MouseCursor.col-resize;
+        pointer-event(e) => { 
+            if (e.button == PointerEventButton.left && e.kind == PointerEventKind.down) { root.resize("e"); } 
+            // if (root.is-press(e)) { root.resize("e"); }
+        }
+    }
+
+    // --- ROGI (CORNERS) - Muszą być zdefiniowane PO bokach, żeby być "na wierzchu" (Z-Index) ---
+
+    // Północny-Zachód (Lewa Góra)
+    TouchArea {
+        x: 0; y: 0;
+        width: border-size * 2; height: border-size * 2;
+        mouse-cursor: MouseCursor.nwse-resize;
+        pointer-event(e) => { 
+            if (e.button == PointerEventButton.left && e.kind == PointerEventKind.down) { root.resize("nw"); } 
+            // if (root.is-press(e)) { root.resize("nw"); }
+        }
+    }
+
+    // Północny-Wschód (Prawa Góra)
+    TouchArea {
+        x: parent.width - self.width; y: 0;
+        width: border-size * 2; height: border-size * 2;
+        mouse-cursor: MouseCursor.nesw-resize;
+        pointer-event(e) => { 
+            if (e.button == PointerEventButton.left && e.kind == PointerEventKind.down) { root.resize("ne"); } 
+            // if (root.is-press(e)) { root.resize("ne"); }
+        }
+    }
+
+    // Południowy-Zachód (Lewy Dół)
+    TouchArea {
+        x: 0; y: parent.height - self.height;
+        width: border-size * 2; height: border-size * 2;
+        mouse-cursor: MouseCursor.nesw-resize;
+        pointer-event(e) => { 
+            if (e.button == PointerEventButton.left && e.kind == PointerEventKind.down) { root.resize("sw"); } 
+            // if (root.is-press(e)) { root.resize("sw"); }
+        }
+    }
+
+    // Południowy-Wschód (Prawy Dół)
+    TouchArea {
+        x: parent.width - self.width; y: parent.height - self.height;
+        width: border-size * 2; height: border-size * 2;
+        mouse-cursor: MouseCursor.nwse-resize;
+        pointer-event(e) => { 
+            if (e.button == PointerEventButton.left && e.kind == PointerEventKind.down) { root.resize("se"); } 
+            // if (root.is-press(e)) { root.resize("se"); }
+        }
+    }
+}

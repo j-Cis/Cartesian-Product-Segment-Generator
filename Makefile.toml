@@ -1,0 +1,26 @@
+env = { BIN_NAME = "${CARGO_MAKE_CRATE_NAME}" }
+
+[tasks.build-release]
+command = "cargo"
+args = ["build", "--release"]
+
+[tasks.build-debug]
+command = "cargo"
+args = ["build"]
+
+[tasks.copy-release]
+command = "powershell"
+args = ["-NoProfile", "-Command", "if (!(Test-Path 'dist\\win\\release')) { New-Item -ItemType Directory -Force -Path 'dist\\win\\release' }; Copy-Item 'target\\release\\${BIN_NAME}.exe' 'dist\\win\\release\\' -Force"]
+
+[tasks.copy-debug]
+command = "powershell"
+args = ["-NoProfile", "-Command", "if (!(Test-Path 'dist\\win\\debug')) { New-Item -ItemType Directory -Force -Path 'dist\\win\\debug' }; Copy-Item 'target\\debug\\${BIN_NAME}.exe' 'dist\\win\\debug\\' -Force"]
+
+[tasks.release]
+dependencies = ["build-release", "copy-release"]
+
+[tasks.debug]
+dependencies = ["build-debug", "copy-debug"]
+
+[tasks.all]
+dependencies = ["release", "debug"]
