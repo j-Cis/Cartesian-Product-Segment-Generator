@@ -1,4 +1,5 @@
-# CPSGen (Cartesian Product Segment Generator)
+# [fifakom-genealogia](https://github.com/j-Cis/fifakom-genealogia/releases) **„Genealogia dla sprytnych”**
+## CPSGen (Cartesian Product Segment Generator)
 
 Narzędzie do generowania kombinacji tekstowych na podstawie wzorców wykorzystujących iloczyn kartezjański. Idealne do tworzenia list słów, testowania morfologii lub generowania wariantów haseł/nazw.
 
