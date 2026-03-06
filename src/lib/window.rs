@@ -21,7 +21,7 @@ pub fn start_drag(window: &Window) {
 }
 
 // Ręczne przesuwanie o zadaną wartość (dla dotyku)
-pub fn move_window(window: &Window, delta_x: f32, delta_y: f32) {
+pub fn window_move(window: &Window, delta_x: f32, delta_y: f32) {
     window.with_winit_window(|winit_window| {
         if let Ok(current_pos) = winit_window.outer_position() {
             let scale_factor = winit_window.scale_factor();
@@ -37,7 +37,7 @@ pub fn move_window(window: &Window, delta_x: f32, delta_y: f32) {
     });
 }
 
-pub fn resize(window: &Window, direction: SharedString) {
+pub fn window_resize(window: &Window, direction: SharedString) {
     window.with_winit_window(|winit_window| {
         let dir = match direction.as_str() {
             "n" => ResizeDirection::North,

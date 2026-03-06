@@ -65,3 +65,7 @@ path = "src/bin/geneteka_zakres_mapa_cli.rs"
 [[bin]]
 name = "GenetekaPobierzZakresHtml"  # Pobieracz rejestrów HTML z Geneteki (Konsola)
 path = "src/bin/geneteka_zakres_html_cli.rs"
+
+[[bin]]
+name = "GenetekaCoJest"  # 
+path = "src/bin/geneteka_co_jest_gui.rs"
