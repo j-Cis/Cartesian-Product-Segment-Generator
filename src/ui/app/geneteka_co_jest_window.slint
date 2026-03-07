@@ -6,6 +6,11 @@ import {
 } from "../components/window-shell.slint";
 import { LineEdit, ScrollView } from "std-widgets.slint";
 
+export struct MapPoint {
+    x: length,
+    y: length,
+    nazwa: string,
+}
 
 export component GenetekaCoJestWindow inherits WindowShell {
     preferred-width: 600px;
@@ -15,6 +20,9 @@ export component GenetekaCoJestWindow inherits WindowShell {
     
     // Właściwości i callbacki dla Rusta
     callback search(string);
+    in property <[MapPoint]> map_points: [];
+    in property <length> map_canvas_width: 700px;
+    in property <length> map_canvas_height: 600px;
     in-out property <[string]> search_results: [];
     VerticalLayout {
         padding: 20px;
@@ -44,6 +52,32 @@ export component GenetekaCoJestWindow inherits WindowShell {
             border-radius: 4px;
             vertical-stretch: 1;
             clip: true;
+
+            // --- NASZA MAPA ---
+        Rectangle {
+                height: root.map_canvas_height;
+            // Używamy stretch, żeby mapa ładnie wypełniała szerokość, 
+            // a nie wystawała sztywno na 700px
+            horizontal-stretch: 1;
+                background: Palette.background-light;
+                border-radius: 4px;
+                border-width: 1px;
+                border-color: Palette.accent-success;
+                clip: true;
+                for pt in root.map_points: Rectangle {
+                // Odejmujemy 2px, żeby środek kropki był dokładnie na koordynatach
+                x: pt.x - 2px;
+                    y: pt.y - 2px;
+                    width: 4px;
+                    height: 4px;
+                    background: #ff0055; // Wyraźny czerwony/różowy kolor pinezki
+                border-radius: 2px;
+                
+                // Opcjonalnie: podpowiedź po najechaniu myszką
+                // tooltip: pt.nazwa; (Slint wspiera proste tooltipy, ale to na później)
+            }
+            }
+
             ScrollView {
                 viewport-width: self.width;
                 VerticalLayout {
