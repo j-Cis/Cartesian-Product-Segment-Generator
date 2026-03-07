@@ -46,6 +46,50 @@ export component MapaKanwa inherits Rectangle {
         root.map_offset_x = visual_center_x - new_center_inner_x;
         root.map_offset_y = visual_center_y - new_center_inner_y;
     }
+    // --- NOWA FUNKCJA DO OBROTU WZDŁUŻ CELOWNIKA ---
+    public function rotate_view(d_angle: angle) {
+        // Zapisujemy stary kąt
+        let old_angle = root.map_rotation;
+        
+        // 1. Gdzie jest środek okna (celownik)?
+        let view_center_x = flick.width / 2;
+        let view_center_y = flick.height / 2;
+        
+        // 2. Gdzie na płótnie jest punkt, który aktualnie jest pod celownikiem?
+        let target_x = view_center_x - root.map_offset_x;
+        let target_y = view_center_y - root.map_offset_y;
+
+        // 3. Względem czego obracamy całą mapę? (środek płótna)
+        let pivot_x = map_layer.width / 2;
+        let pivot_y = map_layer.height / 2;
+
+        // Odległość naszego celu od środka płótna
+        let dx = target_x - pivot_x;
+        let dy = target_y - pivot_y;
+
+        // Obracamy nasz wektor (dx, dy) wstecz o stary kąt...
+        let unrot_cos = Math.cos(-old_angle);
+        let unrot_sin = Math.sin(-old_angle);
+        let orig_dx = dx * unrot_cos - dy * unrot_sin;
+        let orig_dy = dx * unrot_sin + dy * unrot_cos;
+
+        // Zmieniamy główny kąt mapy
+        root.map_rotation += d_angle;
+
+        // ...i obracamy wektor w przód o nowy kąt
+        let new_cos = Math.cos(root.map_rotation);
+        let new_sin = Math.sin(root.map_rotation);
+        let new_dx = orig_dx * new_cos - orig_dy * new_sin;
+        let new_dy = orig_dx * new_sin + orig_dy * new_cos;
+
+        // Obliczamy nową pozycję celu na płótnie
+        let new_target_x = pivot_x + new_dx;
+        let new_target_y = pivot_y + new_dy;
+
+        // 4. Korygujemy offset, żeby nowy target był znów na środku okna!
+        root.map_offset_x = view_center_x - new_target_x;
+        root.map_offset_y = view_center_y - new_target_y;
+    }
     flick := Flickable {
         width: 100%;
         height: 100%;

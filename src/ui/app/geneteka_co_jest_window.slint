@@ -23,12 +23,36 @@ export component GenetekaCoJestWindow inherits WindowShell {
     in property <float> geo_min_lat;
     in property <float> geo_max_lat;
     pure function current_lat() -> string {
-        let ratio = (-kanwa.map_offset_y + (kanwa.height / 2)) / (kanwa.height * kanwa.map_zoom);
+        let view_center_x = kanwa.width / 2;
+        let view_center_y = kanwa.height / 2;
+        let target_x = view_center_x - kanwa.map_offset_x;
+        let target_y = view_center_y - kanwa.map_offset_y;
+        let pivot_x = kanwa.width * kanwa.map_zoom / 2;
+        let pivot_y = kanwa.height * kanwa.map_zoom / 2;
+        let dx = target_x - pivot_x;
+        let dy = target_y - pivot_y;
+        
+        // Cofamy obrót (stąd minus)
+        let cos_a = Math.cos(-kanwa.map_rotation);
+        let sin_a = Math.sin(-kanwa.map_rotation);
+        let orig_y = pivot_y + dx * sin_a + dy * cos_a;
+        let ratio = orig_y / (kanwa.height * kanwa.map_zoom);
         let val = geo_max_lat - (ratio * (geo_max_lat - geo_min_lat));
         return Math.round(val * 10000) / 10000 + "°";
     }
     pure function current_lon() -> string {
-        let ratio = (-kanwa.map_offset_x + (kanwa.width / 2)) / (kanwa.width * kanwa.map_zoom);
+        let view_center_x = kanwa.width / 2;
+        let view_center_y = kanwa.height / 2;
+        let target_x = view_center_x - kanwa.map_offset_x;
+        let target_y = view_center_y - kanwa.map_offset_y;
+        let pivot_x = kanwa.width * kanwa.map_zoom / 2;
+        let pivot_y = kanwa.height * kanwa.map_zoom / 2;
+        let dx = target_x - pivot_x;
+        let dy = target_y - pivot_y;
+        let cos_a = Math.cos(-kanwa.map_rotation);
+        let sin_a = Math.sin(-kanwa.map_rotation);
+        let orig_x = pivot_x + dx * cos_a - dy * sin_a;
+        let ratio = orig_x / (kanwa.width * kanwa.map_zoom);
         let val = geo_min_lon + (ratio * (geo_max_lon - geo_min_lon));
         return Math.round(val * 10000) / 10000 + "°";
     }
@@ -82,10 +106,10 @@ export component GenetekaCoJestWindow inherits WindowShell {
                     kanwa.zoom_around_center(kanwa.map_zoom - 0.5);
                 }
                 rotate_ccw => {
-                    kanwa.map_rotation -= 15deg;
+                    kanwa.rotate_view(-15deg);
                 }
                 rotate_cw => {
-                    kanwa.map_rotation += 15deg;
+                    kanwa.rotate_view(15deg);
                 }
                 pan(dx, dy) => {
                     kanwa.map_offset_x += dx;

@@ -7,7 +7,7 @@ use slint::{ComponentHandle,  VecModel};
 
 use fifak_lib::window; 
 use fifak_lib::setup_window_ctrl_bindings;
-
+use fifak_lib::atlas::{generate_map_data, MapProjection};
 
 slint::include_modules!();
 
@@ -25,64 +25,34 @@ fn main() -> Result<()> {
     let ui= GenetekaCoJestWindow::new()?;
     setup_window_ctrl_bindings!(ui);
 
-    // --- LOGIKA MAPY ---
-    // Pobieramy rozmiar płótna ze Slinta (ustawiłeś domyślnie na 700x600)
-    // let canvas_w = ui.get_map_canvas_width();
-    // let canvas_h = ui.get_map_canvas_height();
 
-    // Szukamy skrajnych punktów (bounding box) żeby mapa idealnie się wpasowała
-    let mut min_lon = f64::MAX;
-    let mut max_lon = f64::MIN;
-    let mut min_lat = f64::MAX;
-    let mut max_lat = f64::MIN;
-
-    for rek in &baza.rekord {
-        if rek.miejsce.lonlat.len() == 2 {
-            let lon = rek.miejsce.lonlat[0];
-            let lat = rek.miejsce.lonlat[1];
-            if lon < min_lon { min_lon = lon; }
-            if lon > max_lon { max_lon = lon; }
-            if lat < min_lat { min_lat = lat; }
-            if lat > max_lat { max_lat = lat; }
-        }
-    }
-
-    // Margines, żeby kropki nie wchodziły na obramowanie
-    let margin = 0.05; 
-    let lon_range = (max_lon - min_lon) * (1.0 + 2.0 * margin);
-    let lat_range = (max_lat - min_lat) * (1.0 + 2.0 * margin);
-    let lon_offset = min_lon - (max_lon - min_lon) * margin;
-    let lat_offset = min_lat - (max_lat - min_lat) * margin;
-
-    // Przeliczamy współrzędne każdego punktu na piksele
-    let mut punkty = Vec::new();
-    for rek in &baza.rekord {
-        if rek.miejsce.lonlat.len() == 2 {
-            let lon = rek.miejsce.lonlat[0];
-            let lat = rek.miejsce.lonlat[1];
-            let nazwa = rek.miejsce.parafia.first().cloned().unwrap_or_default();
-
-            let x_norm = if lon_range > 0.0 { (lon - lon_offset) / lon_range } else { 0.5 };
-            let y_norm = if lat_range > 0.0 { (lat - lat_offset) / lat_range } else { 0.5 };
-
-            punkty.push(MapPoint {
-                x: x_norm as f32,
-                y: (1.0 - y_norm) as f32, // Odwrócona oś Y
-                nazwa: nazwa.into(),
-            });
-        }
+    // ==========================================
+    // LOGIKA MAPY -> przeniesiona do biblioteki atlas!
+    // Wywołujemy z parametrem "Dynamic"
+    // ==========================================
+    let map_data = generate_map_data(&baza.rekord, MapProjection::Dynamic { margin: 0.05 });
+    
+    // Tłumaczymy niezależne punkty z modułu Atlas na typy rozumiane przez Slint (MapPoint)
+    let mut slint_points = Vec::with_capacity(map_data.points.len());
+    for pt in map_data.points {
+        slint_points.push(MapPoint {
+            x: pt.x,
+            y: pt.y,
+            nazwa: pt.name.into(),
+        });
     }
 
     // Wypychamy wyliczone punkty prosto na front-end do Slinta
-    let points_model = Rc::new(VecModel::from(punkty));
+    let points_model = Rc::new(VecModel::from(slint_points));
     ui.set_map_points(points_model.into());
-    // ------------------TRANSFER DANYCH DO SLINTA ---
-    ui.set_geo_min_lon(lon_offset as f32);
-    ui.set_geo_max_lon((lon_offset + lon_range) as f32);
-    ui.set_geo_min_lat(lat_offset as f32);
-    ui.set_geo_max_lat((lat_offset + lat_range) as f32);
-    // -------------------------------------------
-    
+
+    // ------------------ TRANSFER GRANIC DO SLINTA ------------------
+    ui.set_geo_min_lon(map_data.min_lon as f32);
+    ui.set_geo_max_lon(map_data.max_lon as f32);
+    ui.set_geo_min_lat(map_data.min_lat as f32);
+    ui.set_geo_max_lat(map_data.max_lat as f32);
+    // ---------------------------------------------------------------
+
     ui.on_search(|text| {
         println!("[*] Szukamy: {}", text);
     });
