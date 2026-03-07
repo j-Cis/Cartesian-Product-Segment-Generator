@@ -1,9 +1,9 @@
 import { Palette } from "../theme/globals.slint";
 import { WindowShell, CustomBtn } from "../components/window-shell.slint";
-import { LineEdit /*, ScrollView */} from "std-widgets.slint";
+import { LineEdit } from "std-widgets.slint";
 
 import { MapaKanwa, MapPoint } from "../components/mapa-kanwa.slint";
-import { MapaKokpit } from "../components/mapa-kokpit.slint";
+import { MapaKokpit, MapaCelownik } from "../components/mapa-kokpit.slint";
 
 export { MapPoint } 
 
@@ -14,6 +14,26 @@ export component GenetekaCoJestWindow inherits WindowShell {
     callback search(string);
     in property <[MapPoint]> map_points: [];
     in-out property <[string]> search_results: [];
+
+    // ==========================================
+    // BRAKUJĄCE ZMIENNE I FUNKCJE (PRZYWRÓCONE)
+    // ==========================================
+    in property <float> geo_min_lon;
+    in property <float> geo_max_lon;
+    in property <float> geo_min_lat;
+    in property <float> geo_max_lat;
+    pure function current_lat() -> string {
+        let ratio = (-kanwa.map_offset_y + (kanwa.height / 2)) / (kanwa.height * kanwa.map_zoom);
+        let val = geo_max_lat - (ratio * (geo_max_lat - geo_min_lat));
+        return Math.round(val * 10000) / 10000 + "°";
+    }
+    pure function current_lon() -> string {
+        let ratio = (-kanwa.map_offset_x + (kanwa.width / 2)) / (kanwa.width * kanwa.map_zoom);
+        let val = geo_min_lon + (ratio * (geo_max_lon - geo_min_lon));
+        return Math.round(val * 10000) / 10000 + "°";
+    }
+    // ==========================================
+
     VerticalLayout {
         padding: 20px;
         spacing: 15px;
@@ -39,12 +59,20 @@ export component GenetekaCoJestWindow inherits WindowShell {
 
         kanwa := MapaKanwa {
             map_points: root.map_points;
+
+            // 1. CELOWNIK I LICZNIK (Warstwa informacyjna)
+            MapaCelownik {
+                width: 100%;
+                height: 100%;
+                n_coord: root.current_lat();
+                e_coord: root.current_lon();
+                anchor: "ne"; // Licznik w prawym górnym rogu
+            }
+
+            // 2. KOKPIT (Warstwa sterowania)
             MapaKokpit {
-                // TUTAJ ZMIENIASZ POZYCJĘ ("nw", "ne", "sw", "se")
                 anchor: "sw";
                 margin: 10px;
-
-                // POPRAWKA: Tutaj "parent" to mapa, więc możemy bez problemu liczyć pozycję!
                 x: (self.anchor == "nw" || self.anchor == "sw") ? self.margin : parent.width - self.preferred-width - self.margin;
                 y: (self.anchor == "nw" || self.anchor == "ne") ? self.margin : parent.height - self.preferred-height - self.margin;
                 zoom_in => {
@@ -64,25 +92,5 @@ export component GenetekaCoJestWindow inherits WindowShell {
                 }
             }
         }
-        // ----------------------------------------
-
-        //Rectangle {
-        //    background: Palette.background-light;
-        //    border-radius: 4px;
-        //    vertical-stretch: 1;
-        //    clip: true;
-        //    ScrollView {
-        //        viewport-width: self.width;
-        //        VerticalLayout {
-        //            padding: 10px;
-        //            spacing: 5px;
-        //            for res in root.search_results: Text {
-        //                text: res;
-        //                color: Palette.accent-success;
-        //                font-family: "Fira Code";
-        //            }
-        //        }
-        //    }
-        //}
     }
 }

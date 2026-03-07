@@ -76,7 +76,12 @@ fn main() -> Result<()> {
     // Wypychamy wyliczone punkty prosto na front-end do Slinta
     let points_model = Rc::new(VecModel::from(punkty));
     ui.set_map_points(points_model.into());
-    // -------------------
+    // ------------------TRANSFER DANYCH DO SLINTA ---
+    ui.set_geo_min_lon(lon_offset as f32);
+    ui.set_geo_max_lon((lon_offset + lon_range) as f32);
+    ui.set_geo_min_lat(lat_offset as f32);
+    ui.set_geo_max_lat((lat_offset + lat_range) as f32);
+    // -------------------------------------------
     
     ui.on_search(|text| {
         println!("[*] Szukamy: {}", text);

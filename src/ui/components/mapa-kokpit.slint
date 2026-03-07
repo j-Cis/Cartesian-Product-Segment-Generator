@@ -29,6 +29,51 @@ component ShapeBtn inherits Rectangle {
     }
 }
 
+export component MapaCelownik inherits Rectangle {
+    // Współrzędne przesyłane z góry
+    in property <string> n_coord: "0.0000°";
+    in property <string> e_coord: "0.0000°";
+    
+    // Sterowniki pozycji dla licznika
+    in property <string> anchor: "ne"; // Domyślnie Top-Right
+    in property <length> margin: 10px;
+
+    // 1. CELOWNIK (zawsze na środku mapy)
+    // interactive: false sprawia, że kursor myszy "przelatuje" przez niego do mapy
+    Rectangle {
+        width: 20px;
+        height: 20px;
+        x: (parent.width - self.width) / 2;
+        y: (parent.height - self.height) / 2;
+        Path {
+            commands: "M 10 0 L 10 20 M 0 10 L 20 10";
+            stroke: Palette.accent-success.with-alpha(0.3);
+            stroke-width: 1px;
+        }
+    }
+
+    // --- WYŚWIETLACZ WSPÓŁRZĘDNYCH ---
+    Rectangle {
+        // Pozycjonowanie licznika względem krawędzi mapy
+        x: (root.anchor == "nw" || root.anchor == "sw") ? root.margin : parent.width - self.width - root.margin;
+        y: (root.anchor == "nw" || root.anchor == "ne") ? root.margin : parent.height - self.height - root.margin;
+        background: Palette.background-light.with-alpha(0.7);
+        border-radius: 4px;
+        // Rozmiar dopasowany do tekstu
+        width: coords_layout.preferred-width + 10px;
+        height: coords_layout.preferred-height + 10px;
+        coords_layout := VerticalLayout {
+            padding: 5px;
+            Text {
+                text: "N: " + root.n_coord + " | E: " + root.e_coord;
+                color: Palette.accent-success;
+                font-family: "Fira Code";
+                font-size: 12px;
+            }
+        }
+    }
+}
+
 export component MapaKokpit inherits GridLayout {
     padding: 0px;
     spacing: 5px;
