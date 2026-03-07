@@ -30,8 +30,8 @@ fn main() -> Result<()> {
     // LOGIKA MAPY -> przeniesiona do biblioteki atlas!
     // Wywołujemy z parametrem "Dynamic"
     // ==========================================
-    let map_data = generate_map_data(&baza.rekord, MapProjection::Dynamic { margin: 0.05 });
-    
+    //let map_data = generate_map_data(&baza.rekord, MapProjection::Dynamic { margin: 0.05 });
+    let map_data = generate_map_data(&baza.rekord, MapProjection::PlateCarree);
     // Tłumaczymy niezależne punkty z modułu Atlas na typy rozumiane przez Slint (MapPoint)
     let mut slint_points = Vec::with_capacity(map_data.points.len());
     for pt in map_data.points {
