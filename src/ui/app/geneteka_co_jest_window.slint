@@ -81,6 +81,12 @@ export component GenetekaCoJestWindow inherits WindowShell {
                 zoom_out => {
                     kanwa.zoom_around_center(kanwa.map_zoom - 0.5);
                 }
+                rotate_ccw => {
+                    kanwa.map_rotation -= 15deg;
+                }
+                rotate_cw => {
+                    kanwa.map_rotation += 15deg;
+                }
                 pan(dx, dy) => {
                     kanwa.map_offset_x += dx;
                     kanwa.map_offset_y += dy;
@@ -89,6 +95,7 @@ export component GenetekaCoJestWindow inherits WindowShell {
                     kanwa.map_zoom = 1.0;
                     kanwa.map_offset_x = 0px;
                     kanwa.map_offset_y = 0px;
+                    kanwa.map_rotation = 0deg;
                 }
             }
         }

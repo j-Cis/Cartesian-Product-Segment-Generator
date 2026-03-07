@@ -88,6 +88,8 @@ export component MapaKokpit inherits GridLayout {
     callback zoom_out();
     callback pan(length, length);
     callback reset();
+    callback rotate_ccw();
+    callback rotate_cw();
 
     // Wiersz 1
     Row {
@@ -147,6 +149,9 @@ export component MapaKokpit inherits GridLayout {
         ShapeBtn {
             icon_commands: "M11,1 L5,6 L11,11 L11,8 A4,4 0 1,1 7,12 L3,12 A8,8 0 1,0 11,4 Z";
             is_filled: true;
+            clicked => {
+                root.rotate_ccw();
+            }
         }
 
         ShapeBtn {
@@ -161,6 +166,9 @@ export component MapaKokpit inherits GridLayout {
         ShapeBtn {
             icon_commands: "M11,1 L17,6 L11,11 L11,8 A4,4 0 1,0 15,12 L19,12 A8,8 0 1,1 11,4 Z";
             is_filled: true;
+            clicked => {
+                root.rotate_cw();
+            }
         }
     }
 }

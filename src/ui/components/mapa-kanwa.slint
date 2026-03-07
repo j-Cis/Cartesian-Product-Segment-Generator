@@ -11,6 +11,13 @@ export component MapaKanwa inherits Rectangle {
     in-out property <float> map_zoom: 1.0;
     in-out property <length> map_offset_x: 0px;
     in-out property <length> map_offset_y: 0px;
+    
+    // Zmienna kąta i automatyczna, płynna animacja!
+    in-out property <angle> map_rotation: 0deg;
+    animate map_rotation {
+        duration: 250ms;
+        easing: ease-in-out;
+    }
     horizontal-stretch: 1;
     background: Palette.background-light;
     border-radius: 4px;
@@ -18,7 +25,7 @@ export component MapaKanwa inherits Rectangle {
     border-color: Palette.accent-success;
     clip: true;
 
-    // Funkcja dostępna dla rodzica
+    // Funkcja powiększająca
     public function zoom_around_center(new_zoom: float) {
         if (new_zoom <= 0) {
             return;
@@ -51,8 +58,15 @@ export component MapaKanwa inherits Rectangle {
             width: flick.width * root.map_zoom;
             height: flick.height * root.map_zoom;
             for pt in root.map_points: Rectangle {
-                x: pt.x * parent.width - 2px;
-                y: pt.y * parent.height - 2px;
+                // Matematyka obrotu 2D
+                property <length> cx: parent.width / 2;
+                property <length> cy: parent.height / 2;
+                property <length> px: pt.x * parent.width;
+                property <length> py: pt.y * parent.height;
+                property <float> cos_a: Math.cos(root.map_rotation);
+                property <float> sin_a: Math.sin(root.map_rotation);
+                x: self.cx + (self.px - self.cx) * self.cos_a - (self.py - self.cy) * self.sin_a - 2px;
+                y: self.cy + (self.px - self.cx) * self.sin_a + (self.py - self.cy) * self.cos_a - 2px;
                 width: 4px;
                 height: 4px;
                 background: #ff0055;
@@ -61,6 +75,5 @@ export component MapaKanwa inherits Rectangle {
         }
     }
 
-    // Miejsce na wstrzyknięcie elementów wierzchnich (np. kokpitu)
     @children
 }
