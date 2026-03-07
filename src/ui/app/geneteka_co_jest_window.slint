@@ -105,20 +105,21 @@ export component GenetekaCoJestWindow inherits WindowShell {
                 x: (self.anchor == "nw" || self.anchor == "sw") ? self.margin : parent.width - self.preferred-width - self.margin;
                 y: (self.anchor == "nw" || self.anchor == "ne") ? self.margin : parent.height - self.preferred-height - self.margin;
                 zoom_in => {
-                    kanwa.zoom_around_center(kanwa.map_zoom + 0.5);
+                    kanwa.zoom_around_center(kanwa.map_zoom + 0.75);
                 }
                 zoom_out => {
-                    kanwa.zoom_around_center(kanwa.map_zoom - 0.5);
+                    kanwa.zoom_around_center(kanwa.map_zoom - 0.75);
                 }
                 rotate_ccw => {
-                    kanwa.rotate_view(-15deg);
+                    kanwa.rotate_view(-5deg);
                 }
                 rotate_cw => {
-                    kanwa.rotate_view(15deg);
+                    kanwa.rotate_view(5deg);
                 }
                 pan(dx, dy) => {
                     kanwa.map_offset_x += dx;
                     kanwa.map_offset_y += dy;
+                    kanwa.trigger_render();
                 }
                 reset => {
                     kanwa.map_zoom = 1.0;

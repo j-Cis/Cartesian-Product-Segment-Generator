@@ -18,9 +18,9 @@ pub fn generate_map_data(records: &[Rekord], projection: MapProjection) -> MapPr
     
     // FAST-FALL: Używamy Twoich dokładnych nazw z rozszerzeniem .geojson
     let sciezki_geo = [
-        paths::PATH_COASTLINE_110M,
+        paths::PATH_COASTLINE_50M,
         paths::PATH_GLACIERS_110M,
-        paths::PATH_LAKES_110M,
+        paths::PATH_LAKES_50M,
         paths::PATH_RIVERS_LAKE_CENTER_50M,
         paths::PATH_RAMKA,
     ];
