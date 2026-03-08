@@ -3,7 +3,6 @@
 use anyhow::Result;
 use arboard::Clipboard;
 use fifak_lib::logic::morphology::generate_morphology;
-use fifak_lib::window;
 use fifak_lib::setup_window_ctrl_bindings;
 use slint::{ComponentHandle, Model, ModelRc, SharedString, VecModel};
 

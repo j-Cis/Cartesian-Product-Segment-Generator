@@ -5,7 +5,7 @@ use anyhow::Result;
 use std::rc::Rc;
 use slint::ComponentHandle; // UWAGA: Usunąłem stąd VecModel, bo już go nie używamy!
 
-use fifak_lib::window; 
+ 
 use fifak_lib::setup_window_ctrl_bindings;
 use fifak_lib::atlas::{generate_map_data, MapProjection};
 
