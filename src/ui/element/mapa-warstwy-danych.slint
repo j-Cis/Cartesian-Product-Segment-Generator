@@ -32,7 +32,7 @@ export component MapaWarstwyDanych inherits Rectangle {
     in-out property <bool> is_open: false;
     
     // Dostępne opcje: "brak", "z_mapy", "z_rejestru", "suma"
-    in-out property <string> opracowane_parafie: "suma"; // Domyślnie pokazujemy wszystko
+    in-out property <string> opracowane_parafie: "z_mapy"; // Na razie mamy tylko kropki z KML
     
     callback warstwy_zmienione();
     width: layout.preferred-width;

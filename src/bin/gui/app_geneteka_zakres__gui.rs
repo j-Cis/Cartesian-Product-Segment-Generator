@@ -46,7 +46,7 @@ fn main() -> Result<()> {
     // ---------------------------------------------------------------
 
     // ==========================================
-    // NOWOŚĆ: SILNIK RENDERUJĄCY W RUŚCIE (TINY-SKIA)
+    // SILNIK RENDERUJĄCY W RUŚCIE (TINY-SKIA)
     // To zastępuje całkowicie pętlę "for pt in map_data.points..."
     // ==========================================
     let ui_handle = ui.as_weak();
@@ -54,7 +54,18 @@ fn main() -> Result<()> {
 
     ui.on_camera_changed(move |w, h, offset_x, offset_y, zoom, rot| {
         if let Some(ui_ref) = ui_handle.upgrade() {
-            // Rust błyskawicznie rysuje płótno na podstawie widoku z kamery:
+            // 1. ZCZYTYWANIE WSZYSTKICH WARSTW ZE SLINTA (W CZASIE RZECZYWISTYM)
+            let b_res = ui_ref.get_bbox_res().to_string();
+            let c_res = ui_ref.get_coastline_res().to_string();
+            let o_res = ui_ref.get_ocean_res().to_string();
+            let r_res = ui_ref.get_rivers_res().to_string();
+            let l_res = ui_ref.get_lakes_res().to_string();
+            let g_res = ui_ref.get_glaciers_res().to_string();
+            let g30_res = ui_ref.get_graticules_30_res().to_string();
+            let g10_res = ui_ref.get_graticules_10_res().to_string();
+            let o_parafie = ui_ref.get_opracowane_parafie().to_string();
+
+            // 2. WYSYŁKA DO RENDERERA
             let image_frame = fifak_lib::atlas::renderer::render_frame(
                 w as u32,
                 h as u32,
@@ -63,11 +74,21 @@ fn main() -> Result<()> {
                 offset_y,
                 zoom,
                 rot,
+                &b_res,
+                &c_res,
+                &o_res,
+                &r_res,
+                &l_res,
+                &g_res,
+                &g30_res,
+                &g10_res,
+                &o_parafie,
             );
-            // I wysyła jedną gotową, lekką klatkę do Slinta:
+
             ui_ref.set_map_frame(image_frame);
         }
     });
+    // ==========================================
     // ==========================================
 
     ui.on_search(|text| {

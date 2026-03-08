@@ -5,6 +5,22 @@ use crate::pliki::path_data_naturalearth as paths;
 use geojson::{GeoJson, Value};
 use std::fs;
 
+// --- FUNKCJA POMOCNICZA DO ŁADOWANIA (Bez panikowania, jeśli brak pliku!) ---
+fn laduj_warstwe(
+    sciezka: &str,
+    out: &mut Vec<Vec<(f32, f32)>>,
+    min_lon: f64,
+    max_lon: f64,
+    min_lat: f64,
+    max_lat: f64,
+) {
+    if let Ok(data) = fs::read_to_string(sciezka)
+        && let Ok(res) = data.parse::<GeoJson>()
+    {
+        wyciagnij_linie(&res, out, min_lon, max_lon, min_lat, max_lat);
+    }
+}
+
 pub fn generate_map_data(records: &[Rekord], projection: MapProjection) -> MapProcessedData {
     let (min_lon, max_lon, min_lat, max_lat) = match projection {
         MapProjection::ProjWgs84 => proj_plate_carree::get_bounds(),
@@ -14,38 +30,234 @@ pub fn generate_map_data(records: &[Rekord], projection: MapProjection) -> MapPr
     let lon_range = max_lon - min_lon;
     let lat_range = max_lat - min_lat;
 
-    let mut coastlines = Vec::new();
+    // --- TWORZENIE WEKTORÓW DLA WSZYSTKICH WARSTW ---
+    let mut bbox_110m = Vec::new();
+    let mut bbox_50m = Vec::new();
+    let mut bbox_10m = Vec::new();
+    let mut coastline_110m = Vec::new();
+    let mut coastline_50m = Vec::new();
+    let mut coastline_10m = Vec::new();
+    let mut ocean_110m = Vec::new();
+    let mut ocean_50m = Vec::new();
+    let mut ocean_10m = Vec::new();
+    let mut rivers_110m = Vec::new();
+    let mut rivers_50m = Vec::new();
+    let mut rivers_10m = Vec::new();
+    let mut lakes_110m = Vec::new();
+    let mut lakes_50m = Vec::new();
+    let mut lakes_10m = Vec::new();
+    let mut glaciers_110m = Vec::new();
+    let mut glaciers_50m = Vec::new();
+    let mut glaciers_10m = Vec::new();
+    let mut graticules_30_110m = Vec::new();
+    let mut graticules_30_50m = Vec::new();
+    let mut graticules_30_10m = Vec::new();
+    let mut graticules_10_110m = Vec::new();
+    let mut graticules_10_50m = Vec::new();
+    let mut graticules_10_10m = Vec::new();
 
-    // FAST-FALL: Używamy Twoich dokładnych nazw z rozszerzeniem .geojson
-    let sciezki_geo = [
-        paths::PATH_COASTLINE_50M,
-        paths::PATH_GLACIERS_110M,
-        paths::PATH_LAKES_50M,
-        paths::PATH_RIVERS_LAKE_CENTER_50M,
-        paths::PATH_RAMKA,
-    ];
-
-    for sciezka in sciezki_geo {
-        // .expect spowoduje CRASH i poda ścieżkę, jeśli pliku nie ma pod tym adresem
-        let data = fs::read_to_string(sciezka)
-            .unwrap_or_else(|_| panic!("KRYTYCZNY BŁĄD: Nie znaleziono pliku: {}", sciezka));
-
-        let res: GeoJson = data.parse().unwrap_or_else(|_| {
-            panic!(
-                "KRYTYCZNY BŁĄD: Plik {} nie jest poprawnym GeoJSONem",
-                sciezka
-            )
-        });
-
-        wyciagnij_linie(&res, &mut coastlines, min_lon, max_lon, min_lat, max_lat);
-    }
-
-    // Diagnostyka w konsoli
-    println!(
-        ">>> GENERATOR: Wczytano {} segmentów mapy bazowej",
-        coastlines.len()
+    // --- ŁADOWANIE PLIKÓW ---
+    laduj_warstwe(
+        paths::PATH_BBOX_110M,
+        &mut bbox_110m,
+        min_lon,
+        max_lon,
+        min_lat,
+        max_lat,
+    );
+    laduj_warstwe(
+        paths::PATH_BBOX_50M,
+        &mut bbox_50m,
+        min_lon,
+        max_lon,
+        min_lat,
+        max_lat,
+    );
+    laduj_warstwe(
+        paths::PATH_BBOX_10M,
+        &mut bbox_10m,
+        min_lon,
+        max_lon,
+        min_lat,
+        max_lat,
     );
 
+    laduj_warstwe(
+        paths::PATH_COASTLINE_110M,
+        &mut coastline_110m,
+        min_lon,
+        max_lon,
+        min_lat,
+        max_lat,
+    );
+    laduj_warstwe(
+        paths::PATH_COASTLINE_50M,
+        &mut coastline_50m,
+        min_lon,
+        max_lon,
+        min_lat,
+        max_lat,
+    );
+    laduj_warstwe(
+        paths::PATH_COASTLINE_10M,
+        &mut coastline_10m,
+        min_lon,
+        max_lon,
+        min_lat,
+        max_lat,
+    );
+
+    laduj_warstwe(
+        paths::PATH_OCEAN_110M,
+        &mut ocean_110m,
+        min_lon,
+        max_lon,
+        min_lat,
+        max_lat,
+    );
+    laduj_warstwe(
+        paths::PATH_OCEAN_50M,
+        &mut ocean_50m,
+        min_lon,
+        max_lon,
+        min_lat,
+        max_lat,
+    );
+    laduj_warstwe(
+        paths::PATH_OCEAN_10M,
+        &mut ocean_10m,
+        min_lon,
+        max_lon,
+        min_lat,
+        max_lat,
+    );
+
+    laduj_warstwe(
+        paths::PATH_RIVERS_110M,
+        &mut rivers_110m,
+        min_lon,
+        max_lon,
+        min_lat,
+        max_lat,
+    );
+    laduj_warstwe(
+        paths::PATH_RIVERS_50M,
+        &mut rivers_50m,
+        min_lon,
+        max_lon,
+        min_lat,
+        max_lat,
+    );
+    laduj_warstwe(
+        paths::PATH_RIVERS_10M,
+        &mut rivers_10m,
+        min_lon,
+        max_lon,
+        min_lat,
+        max_lat,
+    );
+
+    laduj_warstwe(
+        paths::PATH_LAKES_110M,
+        &mut lakes_110m,
+        min_lon,
+        max_lon,
+        min_lat,
+        max_lat,
+    );
+    laduj_warstwe(
+        paths::PATH_LAKES_50M,
+        &mut lakes_50m,
+        min_lon,
+        max_lon,
+        min_lat,
+        max_lat,
+    );
+    laduj_warstwe(
+        paths::PATH_LAKES_10M,
+        &mut lakes_10m,
+        min_lon,
+        max_lon,
+        min_lat,
+        max_lat,
+    );
+
+    laduj_warstwe(
+        paths::PATH_GLACIERS_110M,
+        &mut glaciers_110m,
+        min_lon,
+        max_lon,
+        min_lat,
+        max_lat,
+    );
+    laduj_warstwe(
+        paths::PATH_GLACIERS_50M,
+        &mut glaciers_50m,
+        min_lon,
+        max_lon,
+        min_lat,
+        max_lat,
+    );
+    laduj_warstwe(
+        paths::PATH_GLACIERS_10M,
+        &mut glaciers_10m,
+        min_lon,
+        max_lon,
+        min_lat,
+        max_lat,
+    );
+
+    laduj_warstwe(
+        paths::PATH_GRATICULES_30_110M,
+        &mut graticules_30_110m,
+        min_lon,
+        max_lon,
+        min_lat,
+        max_lat,
+    );
+    laduj_warstwe(
+        paths::PATH_GRATICULES_30_50M,
+        &mut graticules_30_50m,
+        min_lon,
+        max_lon,
+        min_lat,
+        max_lat,
+    );
+    laduj_warstwe(
+        paths::PATH_GRATICULES_30_10M,
+        &mut graticules_30_10m,
+        min_lon,
+        max_lon,
+        min_lat,
+        max_lat,
+    );
+
+    laduj_warstwe(
+        paths::PATH_GRATICULES_10_110M,
+        &mut graticules_10_110m,
+        min_lon,
+        max_lon,
+        min_lat,
+        max_lat,
+    );
+    laduj_warstwe(
+        paths::PATH_GRATICULES_10_50M,
+        &mut graticules_10_50m,
+        min_lon,
+        max_lon,
+        min_lat,
+        max_lat,
+    );
+    laduj_warstwe(
+        paths::PATH_GRATICULES_10_10M,
+        &mut graticules_10_10m,
+        min_lon,
+        max_lon,
+        min_lat,
+        max_lat,
+    );
+
+    // --- WYLICZANIE PUNKTÓW GENETEKI ---
     let mut points = Vec::new();
     for rek in records {
         if rek.miejsce.lonlat.len() == 2 {
@@ -66,9 +278,33 @@ pub fn generate_map_data(records: &[Rekord], projection: MapProjection) -> MapPr
         }
     }
 
+    // --- PAKOWANIE DO ZWRACANEGO STRUKTU ---
     MapProcessedData {
         points,
-        coastlines,
+        bbox_110m,
+        bbox_50m,
+        bbox_10m,
+        coastline_110m,
+        coastline_50m,
+        coastline_10m,
+        ocean_110m,
+        ocean_50m,
+        ocean_10m,
+        rivers_110m,
+        rivers_50m,
+        rivers_10m,
+        lakes_110m,
+        lakes_50m,
+        lakes_10m,
+        glaciers_110m,
+        glaciers_50m,
+        glaciers_10m,
+        graticules_30_110m,
+        graticules_30_50m,
+        graticules_30_10m,
+        graticules_10_110m,
+        graticules_10_50m,
+        graticules_10_10m,
         min_lon,
         max_lon,
         min_lat,

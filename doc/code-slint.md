@@ -37,6 +37,16 @@ export component AppGenetekaZakres inherits OknoSzkielet {
     in property <float> geo_max_lon;
     in property <float> geo_min_lat;
     in property <float> geo_max_lat;
+    in-out property <string> bbox_res: "50m";
+    in-out property <string> coastline_res: "50m";
+    in-out property <string> ocean_res: "none";
+    in-out property <string> rivers_res: "none";
+    in-out property <string> lakes_res: "none";
+    in-out property <string> glaciers_res: "none";
+    in-out property <string> graticules_30_res: "none";
+    in-out property <string> graticules_10_res: "none";
+    // Dostępne opcje: "brak", "z_mapy", "z_rejestru", "suma"
+    in-out property <string> opracowane_parafie: "z_mapy"; // Na razie mamy tylko kropki z KML
     VerticalLayout {
         padding: 20px;
         spacing: 15px;
@@ -110,6 +120,16 @@ export component AppGenetekaZakres inherits OknoSzkielet {
                 margin: 10px;
                 x: parent.width - self.width - self.margin;
                 y: parent.height - self.height - self.margin;
+                
+                // Dowiązanie dwukierunkowe!
+                bbox_res <=> root.bbox_res;
+                coastline_res <=> root.coastline_res;
+                ocean_res <=> root.ocean_res;
+                rivers_res <=> root.rivers_res;
+                lakes_res <=> root.lakes_res;
+                glaciers_res <=> root.glaciers_res;
+                graticules_30_res <=> root.graticules_30_res;
+                graticules_10_res <=> root.graticules_10_res;
                 warstwy_zmienione => {
                     kanwa.trigger_render();
                 }
@@ -117,9 +137,11 @@ export component AppGenetekaZakres inherits OknoSzkielet {
 
             MapaWarstwyDanych {
                 margin: 10px;
-                // Odsunięte o dodatkowe 40px od prawej krawędzi (35px guzik + 5px odstępu)
                 x: parent.width - self.width - self.margin - 40px;
                 y: parent.height - self.height - self.margin;
+                
+                // Dowiązanie dwukierunkowe!
+                opracowane_parafie <=> root.opracowane_parafie;
                 warstwy_zmienione => {
                     kanwa.trigger_render();
                 }
@@ -794,7 +816,7 @@ export component MapaWarstwyDanych inherits Rectangle {
     in-out property <bool> is_open: false;
     
     // Dostępne opcje: "brak", "z_mapy", "z_rejestru", "suma"
-    in-out property <string> opracowane_parafie: "suma"; // Domyślnie pokazujemy wszystko
+    in-out property <string> opracowane_parafie: "z_mapy"; // Na razie mamy tylko kropki z KML
     
     callback warstwy_zmienione();
     width: layout.preferred-width;
@@ -968,8 +990,11 @@ export component MapaWarstwyDanych inherits Rectangle {
 ```slint
 import { Kolory } from "../theme/kolory.slint";
 import { MapaKokpitGuzik } from "mapa-kokpit-guzik.slint";
+import { ScrollView } from "std-widgets.slint";
 
-// Wewnętrzny komponent - okrągły przycisk "Radio"
+// ---------------------------------------------------------
+// SUB-KOMPONENTY (Aby utrzymać czystość kodu)
+// ---------------------------------------------------------
 component RadioBtn inherits Rectangle {
     in property <bool> active: false;
     callback clicked();
@@ -996,15 +1021,157 @@ component RadioBtn inherits Rectangle {
     }
 }
 
+component KolumnaRadio inherits HorizontalLayout {
+    in property <bool> active;
+    callback clicked();
+    width: 40px;
+    alignment: center;
+    RadioBtn {
+        active: root.active;
+        clicked => {
+            root.clicked();
+        }
+    }
+}
+
+component WarstwaRow inherits HorizontalLayout {
+    in property <string> nazwa;
+    in-out property <string> wartosc;
+    callback zmieniono();
+    height: 24px;
+    Text {
+        width: 110px;
+        text: root.nazwa;
+        color: Kolory.accent-success;
+        vertical-alignment: center;
+        font-family: "Fira Code";
+        font-size: 12px;
+    }
+
+    KolumnaRadio {
+        active: root.wartosc == "none";
+        clicked => {
+            root.wartosc = "none";
+            root.zmieniono();
+        }
+    }
+
+    KolumnaRadio {
+        active: root.wartosc == "110m";
+        clicked => {
+            root.wartosc = "110m";
+            root.zmieniono();
+        }
+    }
+
+    KolumnaRadio {
+        active: root.wartosc == "50m";
+        clicked => {
+            root.wartosc = "50m";
+            root.zmieniono();
+        }
+    }
+
+    KolumnaRadio {
+        active: root.wartosc == "10m";
+        clicked => {
+            root.wartosc = "10m";
+            root.zmieniono();
+        }
+    }
+}
+
+component AkordeonSekcja inherits VerticalLayout {
+    in property <string> tytul;
+    in-out property <bool> is_open: false;
+    spacing: 5px;
+    Rectangle {
+        height: 28px;
+        background: Kolory.hover-background;
+        border-radius: 4px;
+        TouchArea {
+            clicked => {
+                root.is_open = !root.is_open;
+            }
+            Text {
+                x: 10px;
+                y: (parent.height - self.height) / 2;
+                text: (root.is_open ? "▼ " : "▶ ") + root.tytul;
+                color: Kolory.text-primary;
+                font-weight: 700;
+                font-family: "Fira Code";
+            }
+        }
+    }
+
+    VerticalLayout {
+        visible: root.is_open; // <-- ZAMIAST IF UŻYWAMY VISIBLE
+        padding-left: 5px;
+        padding-top: 5px;
+        padding-bottom: 10px;
+        spacing: 8px;
+
+        // Nagłówki Kolumn
+        HorizontalLayout {
+            Text {
+                width: 110px;
+                text: "";
+            }
+
+            Text {
+                width: 40px;
+                text: "Brak";
+                color: Kolory.text-secondary;
+                font-size: 10px;
+                horizontal-alignment: center;
+            }
+
+            Text {
+                width: 40px;
+                text: "110m";
+                color: Kolory.text-secondary;
+                font-size: 10px;
+                horizontal-alignment: center;
+            }
+
+            Text {
+                width: 40px;
+                text: "50m";
+                color: Kolory.text-secondary;
+                font-size: 10px;
+                horizontal-alignment: center;
+            }
+
+            Text {
+                width: 40px;
+                text: "10m";
+                color: Kolory.text-secondary;
+                font-size: 10px;
+                horizontal-alignment: center;
+            }
+        }
+
+        @children
+    }
+}
+
+
+// ---------------------------------------------------------
+// GŁÓWNY PANEL Z AKORDEONAMI
+// ---------------------------------------------------------
 export component MapaWarstwyZiemi inherits Rectangle {
     in property <length> margin: 10px;
     in-out property <bool> is_open: false;
     
-    // Zmienne przechowujące wybraną rozdzielczość: "none", "110m", "50m", "10m"
+    // Zmienne do warstw (Powiększone o nowe zasoby!)
+    in-out property <string> bbox_res: "50m";
+    in-out property <string> coastline_res: "50m";
+    in-out property <string> ocean_res: "none";
     in-out property <string> rivers_res: "none";
     in-out property <string> lakes_res: "none";
-    
-    // Sygnał wysyłany do Rusta, gdy zmienimy warstwę
+    in-out property <string> glaciers_res: "none";
+    in-out property <string> graticules_30_res: "none";
+    in-out property <string> graticules_10_res: "none";
     callback warstwy_zmienione();
     width: layout.preferred-width;
     height: layout.preferred-height;
@@ -1012,147 +1179,117 @@ export component MapaWarstwyZiemi inherits Rectangle {
         alignment: end;
         spacing: 10px;
         if (root.is_open): Rectangle {
+            width: 310px;
+            // Ograniczamy wysokość, żeby ScrollView działał przy wielu opcjach
+            height: 400px;
             background: Kolory.background-light.with-alpha(0.85);
             border-radius: 4px;
             border-width: 1px;
             border-color: Kolory.accent-success;
-            GridLayout {
-                padding: 15px;
-                spacing: 15px;
-                
-                // Wiersz 1: Nagłówki
-                Row {
-                    Text {
-                        text: "WARSTWY";
-                        color: Kolory.accent-success;
-                        font-weight: 700;
-                        font-family: "Fira Code";
-                    }
-
-                    Text {
-                        text: "Brak";
-                        color: Kolory.accent-success;
-                        font-weight: 700;
-                        font-family: "Fira Code";
-                        horizontal-alignment: center;
-                    }
-
-                    Text {
-                        text: "110m";
-                        color: Kolory.accent-success;
-                        font-weight: 700;
-                        font-family: "Fira Code";
-                        horizontal-alignment: center;
-                    }
-
-                    Text {
-                        text: "50m";
-                        color: Kolory.accent-success;
-                        font-weight: 700;
-                        font-family: "Fira Code";
-                        horizontal-alignment: center;
-                    }
-
-                    Text {
-                        text: "10m";
-                        color: Kolory.accent-success;
-                        font-weight: 700;
-                        font-family: "Fira Code";
-                        horizontal-alignment: center;
-                    }
-                }
-                
-                // Wiersz 2: Rzeki
-                Row {
-                    Text {
-                        text: "Rzeki";
-                        color: Kolory.accent-success;
-                        vertical-alignment: center;
-                        font-family: "Fira Code";
-                    }
-
-                    RadioBtn {
-                        active: root.rivers_res == "none";
-                        clicked => {
-                            root.rivers_res = "none";
-                            root.warstwy_zmienione();
-                        }
-                    }
-
-                    RadioBtn {
-                        active: root.rivers_res == "110m";
-                        clicked => {
-                            root.rivers_res = "110m";
-                            root.warstwy_zmienione();
-                        }
-                    }
-
-                    RadioBtn {
-                        active: root.rivers_res == "50m";
-                        clicked => {
-                            root.rivers_res = "50m";
-                            root.warstwy_zmienione();
-                        }
-                    }
-
-                    RadioBtn {
-                        active: root.rivers_res == "10m";
-                        clicked => {
-                            root.rivers_res = "10m";
-                            root.warstwy_zmienione();
-                        }
-                    }
+            VerticalLayout {
+                padding: 10px;
+                spacing: 10px;
+                Text {
+                    text: "MAPA FIZYCZNA (Wektor)";
+                    color: Kolory.accent-success;
+                    font-weight: 700;
+                    font-family: "Fira Code";
                 }
 
-                // Wiersz 3: Jeziora
-                Row {
-                    Text {
-                        text: "Jeziora";
-                        color: Kolory.accent-success;
-                        vertical-alignment: center;
-                        font-family: "Fira Code";
-                    }
+                ScrollView {
+                    vertical-stretch: 1;
+                    viewport-width: self.width;
+                    VerticalLayout {
+                        spacing: 5px;
+                        padding-right: 10px; // Miejsce na suwak
 
-                    RadioBtn {
-                        active: root.lakes_res == "none";
-                        clicked => {
-                            root.lakes_res = "none";
-                            root.warstwy_zmienione();
+                        // AKORDEON 1: BAZA
+                        AkordeonSekcja {
+                            tytul: "Baza i Oceany";
+                            is_open: true; // Domyślnie otwarte
+                            WarstwaRow {
+                                nazwa: "Ramka (BBOX)";
+                                wartosc <=> root.bbox_res;
+                                zmieniono => {
+                                    root.warstwy_zmienione()
+                                }
+                            }
+
+                            WarstwaRow {
+                                nazwa: "Linia Brzegowa";
+                                wartosc <=> root.coastline_res;
+                                zmieniono => {
+                                    root.warstwy_zmienione()
+                                }
+                            }
+
+                            WarstwaRow {
+                                nazwa: "Oceany";
+                                wartosc <=> root.ocean_res;
+                                zmieniono => {
+                                    root.warstwy_zmienione()
+                                }
+                            }
                         }
-                    }
 
-                    RadioBtn {
-                        active: root.lakes_res == "110m";
-                        clicked => {
-                            root.lakes_res = "110m";
-                            root.warstwy_zmienione();
+                        // AKORDEON 2: WODY ŚRÓDLĄDOWE
+                        AkordeonSekcja {
+                            tytul: "Wody Śródlądowe";
+                            WarstwaRow {
+                                nazwa: "Rzeki Główne";
+                                wartosc <=> root.rivers_res;
+                                zmieniono => {
+                                    root.warstwy_zmienione()
+                                }
+                            }
+
+                            WarstwaRow {
+                                nazwa: "Jeziora";
+                                wartosc <=> root.lakes_res;
+                                zmieniono => {
+                                    root.warstwy_zmienione()
+                                }
+                            }
                         }
-                    }
 
-                    RadioBtn {
-                        active: root.lakes_res == "50m";
-                        clicked => {
-                            root.lakes_res = "50m";
-                            root.warstwy_zmienione();
+                        // AKORDEON 3: LÓD
+                        AkordeonSekcja {
+                            tytul: "Lód i Lodowce";
+                            WarstwaRow {
+                                nazwa: "Lodowce";
+                                wartosc <=> root.glaciers_res;
+                                zmieniono => {
+                                    root.warstwy_zmienione()
+                                }
+                            }
                         }
-                    }
 
-                    RadioBtn {
-                        active: root.lakes_res == "10m";
-                        clicked => {
-                            root.lakes_res = "10m";
-                            root.warstwy_zmienione();
+                        // AKORDEON 4: SIATKI
+                        AkordeonSekcja {
+                            tytul: "Siatki Geograficzne";
+                            WarstwaRow {
+                                nazwa: "Siatka co 30°";
+                                wartosc <=> root.graticules_30_res;
+                                zmieniono => {
+                                    root.warstwy_zmienione()
+                                }
+                            }
+
+                            WarstwaRow {
+                                nazwa: "Siatka co 10°";
+                                wartosc <=> root.graticules_10_res;
+                                zmieniono => {
+                                    root.warstwy_zmienione()
+                                }
+                            }
                         }
                     }
                 }
             }
         }
-
-        // Guzik otwierający panel w prawym dolnym rogu
         HorizontalLayout {
             alignment: end;
             MapaKokpitGuzik {
-                // Ikona warstw (romby nakładające się na siebie)
                 icon_commands: "M 12 4 L 4 8 L 12 12 L 20 8 Z M 4 13 L 12 17 L 20 13 M 4 17 L 12 21 L 20 17";
                 is_filled: false;
                 is_active: root.is_open;

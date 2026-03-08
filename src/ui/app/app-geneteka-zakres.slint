@@ -22,6 +22,16 @@ export component AppGenetekaZakres inherits OknoSzkielet {
     in property <float> geo_max_lon;
     in property <float> geo_min_lat;
     in property <float> geo_max_lat;
+    in-out property <string> bbox_res: "50m";
+    in-out property <string> coastline_res: "50m";
+    in-out property <string> ocean_res: "none";
+    in-out property <string> rivers_res: "none";
+    in-out property <string> lakes_res: "none";
+    in-out property <string> glaciers_res: "none";
+    in-out property <string> graticules_30_res: "none";
+    in-out property <string> graticules_10_res: "none";
+    // Dostępne opcje: "brak", "z_mapy", "z_rejestru", "suma"
+    in-out property <string> opracowane_parafie: "z_mapy"; // Na razie mamy tylko kropki z KML
     VerticalLayout {
         padding: 20px;
         spacing: 15px;
@@ -95,6 +105,16 @@ export component AppGenetekaZakres inherits OknoSzkielet {
                 margin: 10px;
                 x: parent.width - self.width - self.margin;
                 y: parent.height - self.height - self.margin;
+                
+                // Dowiązanie dwukierunkowe!
+                bbox_res <=> root.bbox_res;
+                coastline_res <=> root.coastline_res;
+                ocean_res <=> root.ocean_res;
+                rivers_res <=> root.rivers_res;
+                lakes_res <=> root.lakes_res;
+                glaciers_res <=> root.glaciers_res;
+                graticules_30_res <=> root.graticules_30_res;
+                graticules_10_res <=> root.graticules_10_res;
                 warstwy_zmienione => {
                     kanwa.trigger_render();
                 }
@@ -102,9 +122,11 @@ export component AppGenetekaZakres inherits OknoSzkielet {
 
             MapaWarstwyDanych {
                 margin: 10px;
-                // Odsunięte o dodatkowe 40px od prawej krawędzi (35px guzik + 5px odstępu)
                 x: parent.width - self.width - self.margin - 40px;
                 y: parent.height - self.height - self.margin;
+                
+                // Dowiązanie dwukierunkowe!
+                opracowane_parafie <=> root.opracowane_parafie;
                 warstwy_zmienione => {
                     kanwa.trigger_render();
                 }

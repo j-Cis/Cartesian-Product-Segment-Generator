@@ -10,6 +10,22 @@ use crate::pliki::path_data_naturalearth as paths;
 use geojson::{GeoJson, Value};
 use std::fs;
 
+// --- FUNKCJA POMOCNICZA DO ŁADOWANIA (Bez panikowania, jeśli brak pliku!) ---
+fn laduj_warstwe(
+    sciezka: &str,
+    out: &mut Vec<Vec<(f32, f32)>>,
+    min_lon: f64,
+    max_lon: f64,
+    min_lat: f64,
+    max_lat: f64,
+) {
+    if let Ok(data) = fs::read_to_string(sciezka)
+        && let Ok(res) = data.parse::<GeoJson>()
+    {
+        wyciagnij_linie(&res, out, min_lon, max_lon, min_lat, max_lat);
+    }
+}
+
 pub fn generate_map_data(records: &[Rekord], projection: MapProjection) -> MapProcessedData {
     let (min_lon, max_lon, min_lat, max_lat) = match projection {
         MapProjection::ProjWgs84 => proj_plate_carree::get_bounds(),
@@ -19,38 +35,234 @@ pub fn generate_map_data(records: &[Rekord], projection: MapProjection) -> MapPr
     let lon_range = max_lon - min_lon;
     let lat_range = max_lat - min_lat;
 
-    let mut coastlines = Vec::new();
+    // --- TWORZENIE WEKTORÓW DLA WSZYSTKICH WARSTW ---
+    let mut bbox_110m = Vec::new();
+    let mut bbox_50m = Vec::new();
+    let mut bbox_10m = Vec::new();
+    let mut coastline_110m = Vec::new();
+    let mut coastline_50m = Vec::new();
+    let mut coastline_10m = Vec::new();
+    let mut ocean_110m = Vec::new();
+    let mut ocean_50m = Vec::new();
+    let mut ocean_10m = Vec::new();
+    let mut rivers_110m = Vec::new();
+    let mut rivers_50m = Vec::new();
+    let mut rivers_10m = Vec::new();
+    let mut lakes_110m = Vec::new();
+    let mut lakes_50m = Vec::new();
+    let mut lakes_10m = Vec::new();
+    let mut glaciers_110m = Vec::new();
+    let mut glaciers_50m = Vec::new();
+    let mut glaciers_10m = Vec::new();
+    let mut graticules_30_110m = Vec::new();
+    let mut graticules_30_50m = Vec::new();
+    let mut graticules_30_10m = Vec::new();
+    let mut graticules_10_110m = Vec::new();
+    let mut graticules_10_50m = Vec::new();
+    let mut graticules_10_10m = Vec::new();
 
-    // FAST-FALL: Używamy Twoich dokładnych nazw z rozszerzeniem .geojson
-    let sciezki_geo = [
-        paths::PATH_COASTLINE_50M,
-        paths::PATH_GLACIERS_110M,
-        paths::PATH_LAKES_50M,
-        paths::PATH_RIVERS_LAKE_CENTER_50M,
-        paths::PATH_RAMKA,
-    ];
-
-    for sciezka in sciezki_geo {
-        // .expect spowoduje CRASH i poda ścieżkę, jeśli pliku nie ma pod tym adresem
-        let data = fs::read_to_string(sciezka)
-            .unwrap_or_else(|_| panic!("KRYTYCZNY BŁĄD: Nie znaleziono pliku: {}", sciezka));
-
-        let res: GeoJson = data.parse().unwrap_or_else(|_| {
-            panic!(
-                "KRYTYCZNY BŁĄD: Plik {} nie jest poprawnym GeoJSONem",
-                sciezka
-            )
-        });
-
-        wyciagnij_linie(&res, &mut coastlines, min_lon, max_lon, min_lat, max_lat);
-    }
-
-    // Diagnostyka w konsoli
-    println!(
-        ">>> GENERATOR: Wczytano {} segmentów mapy bazowej",
-        coastlines.len()
+    // --- ŁADOWANIE PLIKÓW ---
+    laduj_warstwe(
+        paths::PATH_BBOX_110M,
+        &mut bbox_110m,
+        min_lon,
+        max_lon,
+        min_lat,
+        max_lat,
+    );
+    laduj_warstwe(
+        paths::PATH_BBOX_50M,
+        &mut bbox_50m,
+        min_lon,
+        max_lon,
+        min_lat,
+        max_lat,
+    );
+    laduj_warstwe(
+        paths::PATH_BBOX_10M,
+        &mut bbox_10m,
+        min_lon,
+        max_lon,
+        min_lat,
+        max_lat,
     );
 
+    laduj_warstwe(
+        paths::PATH_COASTLINE_110M,
+        &mut coastline_110m,
+        min_lon,
+        max_lon,
+        min_lat,
+        max_lat,
+    );
+    laduj_warstwe(
+        paths::PATH_COASTLINE_50M,
+        &mut coastline_50m,
+        min_lon,
+        max_lon,
+        min_lat,
+        max_lat,
+    );
+    laduj_warstwe(
+        paths::PATH_COASTLINE_10M,
+        &mut coastline_10m,
+        min_lon,
+        max_lon,
+        min_lat,
+        max_lat,
+    );
+
+    laduj_warstwe(
+        paths::PATH_OCEAN_110M,
+        &mut ocean_110m,
+        min_lon,
+        max_lon,
+        min_lat,
+        max_lat,
+    );
+    laduj_warstwe(
+        paths::PATH_OCEAN_50M,
+        &mut ocean_50m,
+        min_lon,
+        max_lon,
+        min_lat,
+        max_lat,
+    );
+    laduj_warstwe(
+        paths::PATH_OCEAN_10M,
+        &mut ocean_10m,
+        min_lon,
+        max_lon,
+        min_lat,
+        max_lat,
+    );
+
+    laduj_warstwe(
+        paths::PATH_RIVERS_110M,
+        &mut rivers_110m,
+        min_lon,
+        max_lon,
+        min_lat,
+        max_lat,
+    );
+    laduj_warstwe(
+        paths::PATH_RIVERS_50M,
+        &mut rivers_50m,
+        min_lon,
+        max_lon,
+        min_lat,
+        max_lat,
+    );
+    laduj_warstwe(
+        paths::PATH_RIVERS_10M,
+        &mut rivers_10m,
+        min_lon,
+        max_lon,
+        min_lat,
+        max_lat,
+    );
+
+    laduj_warstwe(
+        paths::PATH_LAKES_110M,
+        &mut lakes_110m,
+        min_lon,
+        max_lon,
+        min_lat,
+        max_lat,
+    );
+    laduj_warstwe(
+        paths::PATH_LAKES_50M,
+        &mut lakes_50m,
+        min_lon,
+        max_lon,
+        min_lat,
+        max_lat,
+    );
+    laduj_warstwe(
+        paths::PATH_LAKES_10M,
+        &mut lakes_10m,
+        min_lon,
+        max_lon,
+        min_lat,
+        max_lat,
+    );
+
+    laduj_warstwe(
+        paths::PATH_GLACIERS_110M,
+        &mut glaciers_110m,
+        min_lon,
+        max_lon,
+        min_lat,
+        max_lat,
+    );
+    laduj_warstwe(
+        paths::PATH_GLACIERS_50M,
+        &mut glaciers_50m,
+        min_lon,
+        max_lon,
+        min_lat,
+        max_lat,
+    );
+    laduj_warstwe(
+        paths::PATH_GLACIERS_10M,
+        &mut glaciers_10m,
+        min_lon,
+        max_lon,
+        min_lat,
+        max_lat,
+    );
+
+    laduj_warstwe(
+        paths::PATH_GRATICULES_30_110M,
+        &mut graticules_30_110m,
+        min_lon,
+        max_lon,
+        min_lat,
+        max_lat,
+    );
+    laduj_warstwe(
+        paths::PATH_GRATICULES_30_50M,
+        &mut graticules_30_50m,
+        min_lon,
+        max_lon,
+        min_lat,
+        max_lat,
+    );
+    laduj_warstwe(
+        paths::PATH_GRATICULES_30_10M,
+        &mut graticules_30_10m,
+        min_lon,
+        max_lon,
+        min_lat,
+        max_lat,
+    );
+
+    laduj_warstwe(
+        paths::PATH_GRATICULES_10_110M,
+        &mut graticules_10_110m,
+        min_lon,
+        max_lon,
+        min_lat,
+        max_lat,
+    );
+    laduj_warstwe(
+        paths::PATH_GRATICULES_10_50M,
+        &mut graticules_10_50m,
+        min_lon,
+        max_lon,
+        min_lat,
+        max_lat,
+    );
+    laduj_warstwe(
+        paths::PATH_GRATICULES_10_10M,
+        &mut graticules_10_10m,
+        min_lon,
+        max_lon,
+        min_lat,
+        max_lat,
+    );
+
+    // --- WYLICZANIE PUNKTÓW GENETEKI ---
     let mut points = Vec::new();
     for rek in records {
         if rek.miejsce.lonlat.len() == 2 {
@@ -71,9 +283,33 @@ pub fn generate_map_data(records: &[Rekord], projection: MapProjection) -> MapPr
         }
     }
 
+    // --- PAKOWANIE DO ZWRACANEGO STRUKTU ---
     MapProcessedData {
         points,
-        coastlines,
+        bbox_110m,
+        bbox_50m,
+        bbox_10m,
+        coastline_110m,
+        coastline_50m,
+        coastline_10m,
+        ocean_110m,
+        ocean_50m,
+        ocean_10m,
+        rivers_110m,
+        rivers_50m,
+        rivers_10m,
+        lakes_110m,
+        lakes_50m,
+        lakes_10m,
+        glaciers_110m,
+        glaciers_50m,
+        glaciers_10m,
+        graticules_30_110m,
+        graticules_30_50m,
+        graticules_30_10m,
+        graticules_10_110m,
+        graticules_10_50m,
+        graticules_10_10m,
         min_lon,
         max_lon,
         min_lat,
@@ -177,7 +413,47 @@ pub struct NormalizedPoint {
 
 pub struct MapProcessedData {
     pub points: Vec<NormalizedPoint>,
-    pub coastlines: Vec<Vec<(f32, f32)>>,
+
+    // 1. RAMKI (BBOX)
+    pub bbox_110m: Vec<Vec<(f32, f32)>>,
+    pub bbox_50m: Vec<Vec<(f32, f32)>>,
+    pub bbox_10m: Vec<Vec<(f32, f32)>>,
+
+    // 2. LINIE BRZEGOWE
+    pub coastline_110m: Vec<Vec<(f32, f32)>>,
+    pub coastline_50m: Vec<Vec<(f32, f32)>>,
+    pub coastline_10m: Vec<Vec<(f32, f32)>>,
+
+    // 3. OCEANY
+    pub ocean_110m: Vec<Vec<(f32, f32)>>,
+    pub ocean_50m: Vec<Vec<(f32, f32)>>,
+    pub ocean_10m: Vec<Vec<(f32, f32)>>,
+
+    // 4. RZEKI
+    pub rivers_110m: Vec<Vec<(f32, f32)>>,
+    pub rivers_50m: Vec<Vec<(f32, f32)>>,
+    pub rivers_10m: Vec<Vec<(f32, f32)>>,
+
+    // 5. JEZIORA
+    pub lakes_110m: Vec<Vec<(f32, f32)>>,
+    pub lakes_50m: Vec<Vec<(f32, f32)>>,
+    pub lakes_10m: Vec<Vec<(f32, f32)>>,
+
+    // 6. LODOWCE
+    pub glaciers_110m: Vec<Vec<(f32, f32)>>,
+    pub glaciers_50m: Vec<Vec<(f32, f32)>>,
+    pub glaciers_10m: Vec<Vec<(f32, f32)>>,
+
+    // 7. SIATKI 30°
+    pub graticules_30_110m: Vec<Vec<(f32, f32)>>,
+    pub graticules_30_50m: Vec<Vec<(f32, f32)>>,
+    pub graticules_30_10m: Vec<Vec<(f32, f32)>>,
+
+    // 8. SIATKI 10°
+    pub graticules_10_110m: Vec<Vec<(f32, f32)>>,
+    pub graticules_10_50m: Vec<Vec<(f32, f32)>>,
+    pub graticules_10_10m: Vec<Vec<(f32, f32)>>,
+
     pub min_lon: f64,
     pub max_lon: f64,
     pub min_lat: f64,
@@ -256,6 +532,7 @@ use super::modele::MapProcessedData;
 use slint::{Image, Rgba8Pixel, SharedPixelBuffer};
 use tiny_skia::{Color, Paint, PathBuilder, Pixmap, Rect, Stroke, Transform};
 
+#[allow(clippy::too_many_arguments)]
 pub fn render_frame(
     width: u32,
     height: u32,
@@ -264,85 +541,156 @@ pub fn render_frame(
     offset_y: f32,
     zoom: f32,
     rotation_deg: f32,
+    bbox_res: &str,
+    coastline_res: &str,
+    ocean_res: &str,
+    rivers_res: &str,
+    lakes_res: &str,
+    glaciers_res: &str,
+    grat_30_res: &str,
+    grat_10_res: &str,
+    opracowane_parafie: &str,
 ) -> Image {
     if width == 0 || height == 0 {
         return Image::default();
     }
 
     let mut pixmap = Pixmap::new(width, height).unwrap();
-    // Tło - ustawiam na bardzo ciemny szary, żeby lądy były widoczne
-    pixmap.fill(Color::from_rgba8(30, 30, 35, 255));
+    pixmap.fill(Color::from_rgba8(30, 30, 35, 255)); // Ciemne, "matriksowe" tło
 
     let rot_rad = rotation_deg.to_radians();
     let cos_a = rot_rad.cos();
     let sin_a = rot_rad.sin();
-
     let world_w = width as f32 * zoom;
     let world_h = height as f32 * zoom;
     let pivot_x = world_w / 2.0;
     let pivot_y = world_h / 2.0;
 
-    // --- 1. RYSOWANIE LINII BRZEGOWYCH (MAPA BAZOWA) ---
-    let mut paint_map = Paint::default();
-    // Ustawiam JASKRAWY ZIELONY na moment testu, żebyś widział czy w ogóle coś rysuje
-    paint_map.set_color_rgba8(0, 255, 100, 255);
-    paint_map.anti_alias = true;
-    let stroke = Stroke {
-        width: 1.0,
-        ..Default::default()
+    // --- GENERYCZNA FUNKCJA RYSUJĄCA WARSTWĘ ---
+    let mut draw_layer = |linie: &Vec<Vec<(f32, f32)>>, paint: &Paint| {
+        let stroke = Stroke {
+            width: 1.0,
+            ..Default::default()
+        };
+        for linia in linie {
+            if linia.is_empty() {
+                continue;
+            }
+            let mut pb = PathBuilder::new();
+            for (i, p) in linia.iter().enumerate() {
+                let rot_x = (p.0 * world_w - pivot_x) * cos_a - (p.1 * world_h - pivot_y) * sin_a;
+                let rot_y = (p.0 * world_w - pivot_x) * sin_a + (p.1 * world_h - pivot_y) * cos_a;
+                let sx = pivot_x + rot_x + offset_x;
+                let sy = pivot_y + rot_y + offset_y;
+                if i == 0 {
+                    pb.move_to(sx, sy);
+                } else {
+                    pb.line_to(sx, sy);
+                }
+            }
+            if let Some(path) = pb.finish() {
+                pixmap.stroke_path(&path, paint, &stroke, Transform::identity(), None);
+            }
+        }
     };
 
-    for linia in &map_data.coastlines {
-        if linia.is_empty() {
-            continue;
-        }
-        let mut pb = PathBuilder::new();
+    // 1. OCEANY (Granatowe kontury z lekkim wypełnieniem koloru)
+    let mut p_ocean = Paint::default();
+    p_ocean.set_color_rgba8(20, 40, 70, 255);
+    p_ocean.anti_alias = true;
+    match ocean_res {
+        "110m" => draw_layer(&map_data.ocean_110m, &p_ocean),
+        "50m" => draw_layer(&map_data.ocean_50m, &p_ocean),
+        "10m" => draw_layer(&map_data.ocean_10m, &p_ocean),
+        _ => {}
+    }
 
-        for (i, p) in linia.iter().enumerate() {
-            // MATEMATYKA IDENTYCZNA JAK DLA KROPEK
-            let local_x = p.0 * world_w;
-            let local_y = p.1 * world_h;
-            let dx = local_x - pivot_x;
-            let dy = local_y - pivot_y;
-            let rot_x = dx * cos_a - dy * sin_a;
-            let rot_y = dx * sin_a + dy * cos_a;
+    // 2. SIATKI KARTOGRAFICZNE (Półprzezroczysty, delikatny biały)
+    let mut p_grat = Paint::default();
+    p_grat.set_color_rgba8(255, 255, 255, 30);
+    p_grat.anti_alias = true;
+    match grat_30_res {
+        "110m" => draw_layer(&map_data.graticules_30_110m, &p_grat),
+        "50m" => draw_layer(&map_data.graticules_30_50m, &p_grat),
+        "10m" => draw_layer(&map_data.graticules_30_10m, &p_grat),
+        _ => {}
+    }
+    match grat_10_res {
+        "110m" => draw_layer(&map_data.graticules_10_110m, &p_grat),
+        "50m" => draw_layer(&map_data.graticules_10_50m, &p_grat),
+        "10m" => draw_layer(&map_data.graticules_10_10m, &p_grat),
+        _ => {}
+    }
+
+    // 3. RAMKA / BOUNDING BOX (Wyraźna ramka brzegowa projekcji)
+    let mut p_bbox = Paint::default();
+    p_bbox.set_color_rgba8(255, 255, 255, 100);
+    p_bbox.anti_alias = true;
+    match bbox_res {
+        "110m" => draw_layer(&map_data.bbox_110m, &p_bbox),
+        "50m" => draw_layer(&map_data.bbox_50m, &p_bbox),
+        "10m" => draw_layer(&map_data.bbox_10m, &p_bbox),
+        _ => {}
+    }
+
+    // 4. LINIE BRZEGOWE KONTYNENTÓW (Charakterystyczna, Matrixowa Zieleń)
+    let mut p_coast = Paint::default();
+    p_coast.set_color_rgba8(0, 180, 70, 255);
+    p_coast.anti_alias = true;
+    match coastline_res {
+        "110m" => draw_layer(&map_data.coastline_110m, &p_coast),
+        "50m" => draw_layer(&map_data.coastline_50m, &p_coast),
+        "10m" => draw_layer(&map_data.coastline_10m, &p_coast),
+        _ => {}
+    }
+
+    // 5. LÓD I LODOWCE (Mroźny błękit/biel)
+    let mut p_ice = Paint::default();
+    p_ice.set_color_rgba8(180, 220, 255, 150);
+    p_ice.anti_alias = true;
+    match glaciers_res {
+        "110m" => draw_layer(&map_data.glaciers_110m, &p_ice),
+        "50m" => draw_layer(&map_data.glaciers_50m, &p_ice),
+        "10m" => draw_layer(&map_data.glaciers_10m, &p_ice),
+        _ => {}
+    }
+
+    // 6. RZEKI I JEZIORA (Czysta, przezroczysta woda)
+    let mut p_water = Paint::default();
+    p_water.set_color_rgba8(60, 160, 255, 180);
+    p_water.anti_alias = true;
+    match rivers_res {
+        "110m" => draw_layer(&map_data.rivers_110m, &p_water),
+        "50m" => draw_layer(&map_data.rivers_50m, &p_water),
+        "10m" => draw_layer(&map_data.rivers_10m, &p_water),
+        _ => {}
+    }
+    match lakes_res {
+        "110m" => draw_layer(&map_data.lakes_110m, &p_water),
+        "50m" => draw_layer(&map_data.lakes_50m, &p_water),
+        "10m" => draw_layer(&map_data.lakes_10m, &p_water),
+        _ => {}
+    }
+
+    // 7. PUNKTY GENETEKI (Na samej górze - czerwone kropki)
+    if opracowane_parafie != "brak" {
+        let mut p_dot = Paint::default();
+        p_dot.set_color_rgba8(255, 0, 85, 255);
+        p_dot.anti_alias = true;
+        for pt in &map_data.points {
+            let rot_x = (pt.x * world_w - pivot_x) * cos_a - (pt.y * world_h - pivot_y) * sin_a;
+            let rot_y = (pt.x * world_w - pivot_x) * sin_a + (pt.y * world_h - pivot_y) * cos_a;
             let sx = pivot_x + rot_x + offset_x;
             let sy = pivot_y + rot_y + offset_y;
 
-            if i == 0 {
-                pb.move_to(sx, sy);
-            } else {
-                pb.line_to(sx, sy);
+            if sx >= -5.0
+                && sx <= width as f32 + 5.0
+                && sy >= -5.0
+                && sy <= height as f32 + 5.0
+                && let Some(rect) = Rect::from_xywh(sx - 2.0, sy - 2.0, 4.0, 4.0)
+            {
+                pixmap.fill_rect(rect, &p_dot, Transform::identity(), None);
             }
-        }
-
-        if let Some(path) = pb.finish() {
-            pixmap.stroke_path(&path, &paint_map, &stroke, Transform::identity(), None);
-        }
-    }
-
-    // --- 2. RYSOWANIE PUNKTÓW (GENETEKA) ---
-    let mut paint_pt = Paint::default();
-    paint_pt.set_color_rgba8(255, 0, 85, 255);
-    paint_pt.anti_alias = true;
-
-    for pt in &map_data.points {
-        let local_x = pt.x * world_w;
-        let local_y = pt.y * world_h;
-        let dx = local_x - pivot_x;
-        let dy = local_y - pivot_y;
-        let rot_x = dx * cos_a - dy * sin_a;
-        let rot_y = dx * sin_a + dy * cos_a;
-        let sx = pivot_x + rot_x + offset_x;
-        let sy = pivot_y + rot_y + offset_y;
-
-        if sx >= -5.0
-            && sx <= width as f32 + 5.0
-            && sy >= -5.0
-            && sy <= height as f32 + 5.0
-            && let Some(rect) = Rect::from_xywh(sx - 2.0, sy - 2.0, 4.0, 4.0)
-        {
-            pixmap.fill_rect(rect, &paint_pt, Transform::identity(), None);
         }
     }
 
@@ -1294,67 +1642,189 @@ pub mod path_data_naturalearth;
 ```rust
 pub const DIR_VECT_PHY: &str = "data-naturalearth/Vector-Physical";
 
-pub const PATH_RAMKA: &str = "data-naturalearth/Vector-Physical/ne__ramka.geojson";
+// ==========================================
+// 1. OFICJALNE RAMKI WGS84 (Bounding Boxes)
+// ==========================================
+pub const PATH_BBOX_10M: &str =
+    "data-naturalearth/Vector-Physical/ne_10m_wgs84_bounding_box.geojson";
+pub const PATH_BBOX_50M: &str =
+    "data-naturalearth/Vector-Physical/ne_50m_wgs84_bounding_box.geojson";
+pub const PATH_BBOX_110M: &str =
+    "data-naturalearth/Vector-Physical/ne_110m_wgs84_bounding_box.geojson";
 
-// --- LINIE BRZEGOWE (COASTLINE) ---
-pub const PATH_COASTLINE_110M: &str = "data-naturalearth/Vector-Physical/ne_110m_coastline.geojson";
-pub const PATH_COASTLINE_50M: &str = "data-naturalearth/Vector-Physical/ne_50m_coastline.geojson";
+// ==========================================
+// 2. LINIE BRZEGOWE I OCEANY (Z wyspami i rafami)
+// ==========================================
 pub const PATH_COASTLINE_10M: &str = "data-naturalearth/Vector-Physical/ne_10m_coastline.geojson";
+pub const PATH_COASTLINE_50M: &str = "data-naturalearth/Vector-Physical/ne_50m_coastline.geojson";
+pub const PATH_COASTLINE_110M: &str = "data-naturalearth/Vector-Physical/ne_110m_coastline.geojson";
 
-// --- LODOWCE (GLACIATED AREAS) ---
-pub const PATH_GLACIERS_110M: &str =
-    "data-naturalearth/Vector-Physical/ne_110m_glaciated_areas.geojson";
-pub const PATH_GLACIERS_50M: &str =
-    "data-naturalearth/Vector-Physical/ne_50m_glaciated_areas.geojson";
-pub const PATH_GLACIERS_10M: &str =
-    "data-naturalearth/Vector-Physical/ne_10m_glaciated_areas.geojson";
+pub const PATH_OCEAN_10M: &str = "data-naturalearth/Vector-Physical/ne_10m_ocean.geojson";
+pub const PATH_OCEAN_50M: &str = "data-naturalearth/Vector-Physical/ne_50m_ocean.geojson";
+pub const PATH_OCEAN_110M: &str = "data-naturalearth/Vector-Physical/ne_110m_ocean.geojson";
+pub const PATH_OCEAN_SCALE_RANK_10M: &str =
+    "data-naturalearth/Vector-Physical/ne_10m_ocean_scale_rank.geojson";
 
-// --- JEZIORA (LAKES) ---
-pub const PATH_LAKES_110M: &str = "data-naturalearth/Vector-Physical/ne_110m_lakes.geojson";
-pub const PATH_LAKES_50M: &str = "data-naturalearth/Vector-Physical/ne_50m_lakes.geojson";
-pub const PATH_LAKES_10M: &str = "data-naturalearth/Vector-Physical/ne_10m_lakes.geojson";
-
-// Jeziora szczegółowe (tylko 10m i 50m)
-pub const PATH_LAKES_EUROPE_10M: &str =
-    "data-naturalearth/Vector-Physical/ne_10m_lakes_europe.geojson";
-pub const PATH_LAKES_NORTH_AMERICA_10M: &str =
-    "data-naturalearth/Vector-Physical/ne_10m_lakes_north_america.geojson";
-pub const PATH_LAKES_AUSTRALIA_10M: &str =
-    "data-naturalearth/Vector-Physical/ne_10m_lakes_australia.geojson";
-pub const PATH_LAKES_HISTORIC_50M: &str =
-    "data-naturalearth/Vector-Physical/ne_50m_lakes_historic.geojson";
-pub const PATH_LAKES_HISTORIC_10M: &str =
-    "data-naturalearth/Vector-Physical/ne_10m_lakes_historic.geojson";
-pub const PATH_LAKES_PLUVIAL_10M: &str =
-    "data-naturalearth/Vector-Physical/ne_10m_lakes_pluvial.geojson";
-
-// --- RZEKI (RIVERS) ---
-pub const PATH_RIVERS_LAKE_CENTER_110M: &str =
-    "data-naturalearth/Vector-Physical/ne_110m_rivers_lake_centerlines.geojson";
-pub const PATH_RIVERS_LAKE_CENTER_50M: &str =
-    "data-naturalearth/Vector-Physical/ne_50m_rivers_lake_centerlines.geojson";
-pub const PATH_RIVERS_LAKE_CENTER_10M: &str =
-    "data-naturalearth/Vector-Physical/ne_10m_rivers_lake_centerlines.geojson";
-
-// Rzeki ze skalowaniem (scale rank)
-pub const PATH_RIVERS_SCALE_50M: &str =
-    "data-naturalearth/Vector-Physical/ne_50m_rivers_lake_centerlines_scale_rank.geojson";
-pub const PATH_RIVERS_SCALE_10M: &str =
-    "data-naturalearth/Vector-Physical/ne_10m_rivers_lake_centerlines_scale_rank.geojson";
-
-// Rzeki regionalne (tylko 10m)
-pub const PATH_RIVERS_EUROPE_10M: &str =
-    "data-naturalearth/Vector-Physical/ne_10m_rivers_europe.geojson";
-pub const PATH_RIVERS_NORTH_AMERICA_10M: &str =
-    "data-naturalearth/Vector-Physical/ne_10m_rivers_north_america.geojson";
-pub const PATH_RIVERS_AUSTRALIA_10M: &str =
-    "data-naturalearth/Vector-Physical/ne_10m_rivers_australia.geojson";
-
-// --- WYSPY (MINOR ISLANDS) ---
 pub const PATH_MINOR_ISLANDS_10M: &str =
     "data-naturalearth/Vector-Physical/ne_10m_minor_islands.geojson";
 pub const PATH_MINOR_ISLANDS_COAST_10M: &str =
     "data-naturalearth/Vector-Physical/ne_10m_minor_islands_coastline.geojson";
+pub const PATH_REEFS_10M: &str = "data-naturalearth/Vector-Physical/ne_10m_reefs.geojson";
+
+// ==========================================
+// 3. BATYMETRIA (Głębokości oceanów - 12 warstw)
+// ==========================================
+pub const PATH_BATHYMETRY_A_10000: &str =
+    "data-naturalearth/Vector-Physical/ne_10m_bathymetry_A_10000.geojson";
+pub const PATH_BATHYMETRY_B_9000: &str =
+    "data-naturalearth/Vector-Physical/ne_10m_bathymetry_B_9000.geojson";
+pub const PATH_BATHYMETRY_C_8000: &str =
+    "data-naturalearth/Vector-Physical/ne_10m_bathymetry_C_8000.geojson";
+pub const PATH_BATHYMETRY_D_7000: &str =
+    "data-naturalearth/Vector-Physical/ne_10m_bathymetry_D_7000.geojson";
+pub const PATH_BATHYMETRY_E_6000: &str =
+    "data-naturalearth/Vector-Physical/ne_10m_bathymetry_E_6000.geojson";
+pub const PATH_BATHYMETRY_F_5000: &str =
+    "data-naturalearth/Vector-Physical/ne_10m_bathymetry_F_5000.geojson";
+pub const PATH_BATHYMETRY_G_4000: &str =
+    "data-naturalearth/Vector-Physical/ne_10m_bathymetry_G_4000.geojson";
+pub const PATH_BATHYMETRY_H_3000: &str =
+    "data-naturalearth/Vector-Physical/ne_10m_bathymetry_H_3000.geojson";
+pub const PATH_BATHYMETRY_I_2000: &str =
+    "data-naturalearth/Vector-Physical/ne_10m_bathymetry_I_2000.geojson";
+pub const PATH_BATHYMETRY_J_1000: &str =
+    "data-naturalearth/Vector-Physical/ne_10m_bathymetry_J_1000.geojson";
+pub const PATH_BATHYMETRY_K_200: &str =
+    "data-naturalearth/Vector-Physical/ne_10m_bathymetry_K_200.geojson";
+pub const PATH_BATHYMETRY_L_0: &str =
+    "data-naturalearth/Vector-Physical/ne_10m_bathymetry_L_0.geojson";
+
+// ==========================================
+// 4. SIATKI KARTOGRAFICZNE (Graticules)
+// ==========================================
+pub const PATH_GRATICULES_1_10M: &str =
+    "data-naturalearth/Vector-Physical/ne_10m_graticules_1.geojson";
+pub const PATH_GRATICULES_5_10M: &str =
+    "data-naturalearth/Vector-Physical/ne_10m_graticules_5.geojson";
+pub const PATH_GRATICULES_10_10M: &str =
+    "data-naturalearth/Vector-Physical/ne_10m_graticules_10.geojson";
+pub const PATH_GRATICULES_15_10M: &str =
+    "data-naturalearth/Vector-Physical/ne_10m_graticules_15.geojson";
+pub const PATH_GRATICULES_20_10M: &str =
+    "data-naturalearth/Vector-Physical/ne_10m_graticules_20.geojson";
+pub const PATH_GRATICULES_30_10M: &str =
+    "data-naturalearth/Vector-Physical/ne_10m_graticules_30.geojson";
+
+pub const PATH_GRATICULES_1_50M: &str =
+    "data-naturalearth/Vector-Physical/ne_50m_graticules_1.geojson";
+pub const PATH_GRATICULES_5_50M: &str =
+    "data-naturalearth/Vector-Physical/ne_50m_graticules_5.geojson";
+pub const PATH_GRATICULES_10_50M: &str =
+    "data-naturalearth/Vector-Physical/ne_50m_graticules_10.geojson";
+pub const PATH_GRATICULES_15_50M: &str =
+    "data-naturalearth/Vector-Physical/ne_50m_graticules_15.geojson";
+pub const PATH_GRATICULES_20_50M: &str =
+    "data-naturalearth/Vector-Physical/ne_50m_graticules_20.geojson";
+pub const PATH_GRATICULES_30_50M: &str =
+    "data-naturalearth/Vector-Physical/ne_50m_graticules_30.geojson";
+
+pub const PATH_GRATICULES_1_110M: &str =
+    "data-naturalearth/Vector-Physical/ne_110m_graticules_1.geojson";
+pub const PATH_GRATICULES_5_110M: &str =
+    "data-naturalearth/Vector-Physical/ne_110m_graticules_5.geojson";
+pub const PATH_GRATICULES_10_110M: &str =
+    "data-naturalearth/Vector-Physical/ne_110m_graticules_10.geojson";
+pub const PATH_GRATICULES_15_110M: &str =
+    "data-naturalearth/Vector-Physical/ne_110m_graticules_15.geojson";
+pub const PATH_GRATICULES_20_110M: &str =
+    "data-naturalearth/Vector-Physical/ne_110m_graticules_20.geojson";
+pub const PATH_GRATICULES_30_110M: &str =
+    "data-naturalearth/Vector-Physical/ne_110m_graticules_30.geojson";
+
+// ==========================================
+// 5. WODY ŚRÓDLĄDOWE (Rzeki i Jeziora)
+// ==========================================
+pub const PATH_RIVERS_10M: &str =
+    "data-naturalearth/Vector-Physical/ne_10m_rivers_lake_centerlines.geojson";
+pub const PATH_RIVERS_SCALE_10M: &str =
+    "data-naturalearth/Vector-Physical/ne_10m_rivers_lake_centerlines_scale_rank.geojson";
+pub const PATH_RIVERS_AUSTRALIA_10M: &str =
+    "data-naturalearth/Vector-Physical/ne_10m_rivers_australia.geojson";
+pub const PATH_RIVERS_EUROPE_10M: &str =
+    "data-naturalearth/Vector-Physical/ne_10m_rivers_europe.geojson";
+pub const PATH_RIVERS_NORTH_AMERICA_10M: &str =
+    "data-naturalearth/Vector-Physical/ne_10m_rivers_north_america.geojson";
+
+pub const PATH_RIVERS_50M: &str =
+    "data-naturalearth/Vector-Physical/ne_50m_rivers_lake_centerlines.geojson";
+pub const PATH_RIVERS_SCALE_50M: &str =
+    "data-naturalearth/Vector-Physical/ne_50m_rivers_lake_centerlines_scale_rank.geojson";
+pub const PATH_RIVERS_110M: &str =
+    "data-naturalearth/Vector-Physical/ne_110m_rivers_lake_centerlines.geojson";
+
+pub const PATH_LAKES_10M: &str = "data-naturalearth/Vector-Physical/ne_10m_lakes.geojson";
+pub const PATH_LAKES_HISTORIC_10M: &str =
+    "data-naturalearth/Vector-Physical/ne_10m_lakes_historic.geojson";
+pub const PATH_LAKES_PLUVIAL_10M: &str =
+    "data-naturalearth/Vector-Physical/ne_10m_lakes_pluvial.geojson";
+pub const PATH_LAKES_AUSTRALIA_10M: &str =
+    "data-naturalearth/Vector-Physical/ne_10m_lakes_australia.geojson";
+pub const PATH_LAKES_EUROPE_10M: &str =
+    "data-naturalearth/Vector-Physical/ne_10m_lakes_europe.geojson";
+pub const PATH_LAKES_NORTH_AMERICA_10M: &str =
+    "data-naturalearth/Vector-Physical/ne_10m_lakes_north_america.geojson";
+
+pub const PATH_LAKES_50M: &str = "data-naturalearth/Vector-Physical/ne_50m_lakes.geojson";
+pub const PATH_LAKES_HISTORIC_50M: &str =
+    "data-naturalearth/Vector-Physical/ne_50m_lakes_historic.geojson";
+pub const PATH_LAKES_110M: &str = "data-naturalearth/Vector-Physical/ne_110m_lakes.geojson";
+
+// ==========================================
+// 6. LÓD (Lodowce i szelfy lodowe Antarktydy)
+// ==========================================
+pub const PATH_GLACIERS_10M: &str =
+    "data-naturalearth/Vector-Physical/ne_10m_glaciated_areas.geojson";
+pub const PATH_GLACIERS_50M: &str =
+    "data-naturalearth/Vector-Physical/ne_50m_glaciated_areas.geojson";
+pub const PATH_GLACIERS_110M: &str =
+    "data-naturalearth/Vector-Physical/ne_110m_glaciated_areas.geojson";
+
+pub const PATH_ICE_SHELVES_LINES_10M: &str =
+    "data-naturalearth/Vector-Physical/ne_10m_antarctic_ice_shelves_lines.geojson";
+pub const PATH_ICE_SHELVES_POLYS_10M: &str =
+    "data-naturalearth/Vector-Physical/ne_10m_antarctic_ice_shelves_polys.geojson";
+pub const PATH_ICE_SHELVES_LINES_50M: &str =
+    "data-naturalearth/Vector-Physical/ne_50m_antarctic_ice_shelves_lines.geojson";
+pub const PATH_ICE_SHELVES_POLYS_50M: &str =
+    "data-naturalearth/Vector-Physical/ne_50m_antarctic_ice_shelves_polys.geojson";
+
+// ==========================================
+// 7. GEOGRAFIA BAZOWA (Linie, Regiony, Poligony Morskie)
+// ==========================================
+pub const PATH_GEOGRAPHIC_LINES_10M: &str =
+    "data-naturalearth/Vector-Physical/ne_10m_geographic_lines.geojson";
+pub const PATH_GEOGRAPHY_MARINE_POLYS_10M: &str =
+    "data-naturalearth/Vector-Physical/ne_10m_geography_marine_polys.geojson";
+pub const PATH_REGIONS_POINTS_10M: &str =
+    "data-naturalearth/Vector-Physical/ne_10m_geography_regions_points.geojson";
+pub const PATH_REGIONS_POLYS_10M: &str =
+    "data-naturalearth/Vector-Physical/ne_10m_geography_regions_polys.geojson";
+pub const PATH_REGIONS_ELEVATION_POINTS_10M: &str =
+    "data-naturalearth/Vector-Physical/ne_10m_geography_regions_elevation_points.geojson";
+
+pub const PATH_GEOGRAPHIC_LINES_50M: &str =
+    "data-naturalearth/Vector-Physical/ne_50m_geographic_lines.geojson";
+
+pub const PATH_GEOGRAPHIC_LINES_110M: &str =
+    "data-naturalearth/Vector-Physical/ne_110m_geographic_lines.geojson";
+pub const PATH_GEOGRAPHY_MARINE_POLYS_110M: &str =
+    "data-naturalearth/Vector-Physical/ne_110m_geography_marine_polys.geojson";
+pub const PATH_REGIONS_POINTS_110M: &str =
+    "data-naturalearth/Vector-Physical/ne_110m_geography_regions_points.geojson";
+pub const PATH_REGIONS_POLYS_110M: &str =
+    "data-naturalearth/Vector-Physical/ne_110m_geography_regions_polys.geojson";
+pub const PATH_REGIONS_ELEVATION_POINTS_110M: &str =
+    "data-naturalearth/Vector-Physical/ne_110m_geography_regions_elevation_points.geojson";
 
 ```
 
