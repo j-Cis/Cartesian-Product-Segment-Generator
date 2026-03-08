@@ -1,67 +1,149 @@
-# Komenda              | Co robi?                                     | Gdzie szukać pliku?
-# ---------------------|----------------------------------------------|-------------------
-# cargo make r [nazwa] | Buduje i kopiuje JEDNĄ wersję finalną        | dist/win/release/
-# cargo make r-all     | Buduje i kopiuje WSZYSTKIE wersje finalne    | dist/win/release/
-# cargo make d [nazwa] | Buduje i kopiuje JEDNĄ wersję testową        | dist/win/debug/
-# cargo make d-all     | Buduje i kopiuje WSZYSTKIE wersje testowe    | dist/win/debug/
-# cargo make dist-r    | Tylko kopiuje to, co już zbudowane (Release) | dist/win/release/
-# cargo make dist-d    | Tylko kopiuje to, co już zbudowane (Debug)   | dist/win/debug/
+[config]
+skip_core_tasks = true
+
+# ==========================================
+# KOMENDY INFORMACYJNE
+# ==========================================
+
+[tasks.h]
+description = "Wyświetla listę dostępnych komend"
+command = "powershell"
+args = [
+    "-NoProfile",
+    "-Command",
+    '''
+Write-Host "=================================================" -ForegroundColor Cyan
+Write-Host " DOSTĘPNE KOMENDY (cargo make):" -ForegroundColor Yellow
+Write-Host "-------------------------------------------------" -ForegroundColor Cyan
+Write-Host "  cargo make h         : Wyświetla tę listę komend"
+Write-Host "  cargo make bins      : Wyświetla listę aplikacji z Cargo.toml"
+Write-Host "  cargo make bins-b    : Buduje WSZYSTKIE apki (Debug + Release) BEZ kopiowania"
+Write-Host "  cargo make bins-get  : Tylko KOPIUJE to, co już zbudowane (Force)"
+Write-Host "  cargo make b-r-all     : Buduje wszystkie apki (Release) i kopiuje"
+Write-Host "  cargo make b-d-all     : Buduje wszystkie apki (Debug) i kopiuje"
+Write-Host "  cargo make b-r [nazwa] : Buduje JEDNĄ apkę (Release) i kopiuje"
+Write-Host "  cargo make b-d [nazwa] : Buduje JEDNĄ apkę (Debug) i kopiuje"
+Write-Host "=================================================" -ForegroundColor Cyan
+''',
+]
+
+[tasks.bins]
+description = "Wypisuje listę aplikacji pobraną bezpośrednio z Cargo.toml"
+command = "powershell"
+args = [
+    "-NoProfile",
+    "-Command",
+    '''
+$content = [System.IO.File]::ReadAllText("Cargo.toml")
+$matches = [regex]::Matches($content, '\[\[bin\]\]\s*name\s*=\s*"([^"]+)"')
+Write-Host "Lista aplikacji znalezionych w Cargo.toml:" -ForegroundColor Yellow
+foreach ($m in $matches) { Write-Host " - $($m.Groups[1].Value)" -ForegroundColor Cyan }
+''',
+]
 
 
-# --- TASKS KOPIOWANIA (Dynamiczne) ---
+# ==========================================
+# TASKS KOPIOWANIA (Dynamiczne z Cargo.toml)
+# ==========================================
 
 [tasks.dist-r]
 description = "Kopiuje pliki .exe z target/release do dist"
 command = "powershell"
 args = [
-    "-NoProfile", 
-    "-Command", 
+    "-NoProfile",
+    "-Command",
     '''
-    $sourceDir = "target\\release";
-    $targetDir = "dist\\win\\release";
-    if (!(Test-Path $targetDir)) { New-Item -ItemType Directory -Force -Path $targetDir };
-    Get-ChildItem -Path $sourceDir -Filter *.exe | ForEach-Object { Copy-Item $_.FullName "$targetDir\\" -Force; Write-Host "Skopiowano: $($_.Name)" }
-    '''
+$targetDir = "dist/win/release"
+if (!(Test-Path $targetDir)) { New-Item -ItemType Directory -Force -Path $targetDir | Out-Null }
+
+$content = [System.IO.File]::ReadAllText("Cargo.toml")
+$matches = [regex]::Matches($content, '\[\[bin\]\]\s*name\s*=\s*"([^"]+)"')
+
+foreach ($m in $matches) {
+    $bin = $m.Groups[1].Value
+    $src = "target/release/${bin}.exe"
+    if (Test-Path $src) {
+        Copy-Item $src "$targetDir/" -Force
+        Write-Host "Skopiowano (Release): $bin.exe" -ForegroundColor Green
+    }
+}
+''',
 ]
 
 [tasks.dist-d]
 description = "Kopiuje pliki .exe z target/debug do dist"
 command = "powershell"
 args = [
-    "-NoProfile", 
-    "-Command", 
+    "-NoProfile",
+    "-Command",
     '''
-    $sourceDir = "target\\debug";
-    $targetDir = "dist\\win\\debug";
-    if (!(Test-Path $targetDir)) { New-Item -ItemType Directory -Force -Path $targetDir };
-    Get-ChildItem -Path $sourceDir -Filter *.exe | ForEach-Object { Copy-Item $_.FullName "$targetDir\\" -Force; Write-Host "Skopiowano (debug): $($_.Name)" }
-    '''
+$targetDir = "dist/win/debug"
+if (!(Test-Path $targetDir)) { New-Item -ItemType Directory -Force -Path $targetDir | Out-Null }
+
+$content = [System.IO.File]::ReadAllText("Cargo.toml")
+$matches = [regex]::Matches($content, '\[\[bin\]\]\s*name\s*=\s*"([^"]+)"')
+
+foreach ($m in $matches) {
+    $bin = $m.Groups[1].Value
+    $src = "target/debug/${bin}.exe"
+    if (Test-Path $src) {
+        Copy-Item $src "$targetDir/" -Force
+        Write-Host "Skopiowano (Debug)  : $bin.exe" -ForegroundColor Green
+    }
+}
+''',
 ]
 
-# --- SZYBKIE BUDOWANIE (r = release, d = debug) ---
+[tasks.bins-get]
+description = "Kopiuje wszystko do dist (Debug + Release)"
+dependencies = ["dist-d", "dist-r"]
 
-[tasks.r]
-description = "Buduje jedną binarkę (release) i kopiuje"
-command = "cargo"
-args = ["build", "--release", "--bin", "${@}"]
-run_task = "dist-r"
 
-[tasks.d]
-description = "Buduje jedną binarkę (debug) i kopiuje"
-command = "cargo"
-args = ["build", "--bin", "${@}"]
-run_task = "dist-d"
+# ==========================================
+# ZADANIA BUDOWANIA (Baza dla Cargo)
+# ==========================================
 
-# --- ZBIORCZE BUDOWANIE WSZYSTKIEGO (all) ---
-
-[tasks.r-all]
-description = "Buduje wszystkie binarki (release) i kopiuje"
+[tasks.cargo-b-r-all]
 command = "cargo"
 args = ["build", "--bins", "--release"]
-run_task = "dist-r"
 
-[tasks.d-all]
-description = "Buduje wszystkie binarki (debug) i kopiuje"
+[tasks.cargo-b-d-all]
 command = "cargo"
 args = ["build", "--bins"]
-run_task = "dist-d"
+
+[tasks.cargo-b-r-single]
+command = "cargo"
+args = ["build", "--release", "--bin", "${@}"]
+
+[tasks.cargo-b-d-single]
+command = "cargo"
+args = ["build", "--bin", "${@}"]
+
+
+# ==========================================
+# GŁÓWNE KOMENDY UŻYTKOWNIKA
+# ==========================================
+
+# [tasks.bins-b]
+# description = "Buduje WSZYSTKIE binarki w Debug i Release, po czym kopiuje"
+# dependencies = ["b-d-all", "b-r-all"]
+
+[tasks.bins-b]
+description = "Buduje WSZYSTKIE binarki w Debug i Release (BEZ KOPIOWANIA)"
+dependencies = ["cargo-b-d-all", "cargo-b-r-all"]
+
+[tasks.b-r-all]
+description = "Buduje wszystkie binarki (release) i kopiuje"
+dependencies = ["cargo-b-r-all", "dist-r"]
+
+[tasks.b-d-all]
+description = "Buduje wszystkie binarki (debug) i kopiuje"
+dependencies = ["cargo-b-d-all", "dist-d"]
+
+[tasks.b-r]
+description = "Buduje jedną binarkę (release) i kopiuje"
+dependencies = ["cargo-b-r-single", "dist-r"]
+
+[tasks.b-d]
+description = "Buduje jedną binarkę (debug) i kopiuje"
+dependencies = ["cargo-b-d-single", "dist-d"]
