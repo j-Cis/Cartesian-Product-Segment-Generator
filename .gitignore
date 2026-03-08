@@ -5,4 +5,7 @@ Cargo.lock
 
 /data-naturalearth/Vector-Physical/_info/
 /data-naturalearth/Vector-Physical/_raw/
+/data-naturalearth/Vector-Physical/_get-box/
+/data-naturalearth/Vector-Physical/_get-label/
+/data-naturalearth/Vector-Physical/_get2/
 

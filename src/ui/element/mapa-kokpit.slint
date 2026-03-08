@@ -19,6 +19,12 @@ export component MapaKokpit inherits FocusScope {
 
     // NASŁUCHIWANIE KLAWISZY (QWE / ASD / ZXC)
     key-pressed(event) => {
+        
+        // WYŁĄCZANIE KLAWIATURY: [Alt] + [W]
+        if (root.keyboard_active && event.modifiers.alt && (event.text == "w" || event.text == "W")) {
+            root.keyboard_active = false;
+            return accept;
+        }
         if (!root.keyboard_active) {
             return reject;
         }
@@ -56,9 +62,10 @@ export component MapaKokpit inherits FocusScope {
             root.rotate_ccw();
             return accept;
         }
-        // Klawisz X służy u nas jako włącznik/wyłącznik
+        // Klawisz X resetuje widok!
         if (event.text == "x" || event.text == "X") {
-            root.keyboard_active = false;
+            // root.keyboard_active = false;
+            root.reset();
             return accept;
         }
         if (event.text == "c" || event.text == "C") {

@@ -160,8 +160,8 @@ export component AppGenetekaZakres inherits OknoSzkielet {
             MapaKokpit {
                 anchor: "sw";
                 margin: 10px;
-                x: (self.anchor == "nw" || self.anchor == "sw") ? self.margin : parent.width - self.preferred-width - self.margin;
-                y: (self.anchor == "nw" || self.anchor == "ne") ? self.margin : parent.height - self.preferred-height - self.margin;
+                x: (self.anchor == "nw" || self.anchor == "sw") ? self.margin : parent.width - self.width - self.margin;
+                y: (self.anchor == "nw" || self.anchor == "ne") ? self.margin : parent.height - self.height - self.margin;
                 zoom_in => {
                     kanwa.zoom_around_center(kanwa.map_zoom * 1.15);
                 }
@@ -647,7 +647,7 @@ export component MapaKokpitSiatka inherits GridLayout {
             // GÓRNY MAŁY GUZIK - Reset 
             MapaKokpitGuzik {
                 height: 15px;
-                icon_commands: "M 6 6 L 17 6 L 17 17 L 6 17 Z";
+                icon_commands: "M 6 2 L 17 2 L 17 8 L 6 8 Z";
                 is_filled: true;
                 clicked => {
                     root.reset();
@@ -702,6 +702,12 @@ export component MapaKokpit inherits FocusScope {
 
     // NASŁUCHIWANIE KLAWISZY (QWE / ASD / ZXC)
     key-pressed(event) => {
+        // WYŁĄCZANIE KLAWIATURY: [Alt] + [W]
+        if (root.keyboard_active && event.modifiers.alt && (event.text == "w" || event.text == "W")) {
+            root.keyboard_active = false;
+            return accept;
+        }
+
         if (!root.keyboard_active) {
             return reject;
         }
@@ -739,9 +745,9 @@ export component MapaKokpit inherits FocusScope {
             root.rotate_ccw();
             return accept;
         }
-        // Klawisz X służy u nas jako włącznik/wyłącznik
+        // Klawisz X -> resetuje widok!
         if (event.text == "x" || event.text == "X") {
-            root.keyboard_active = false;
+            root.reset()
             return accept;
         }
         if (event.text == "c" || event.text == "C") {

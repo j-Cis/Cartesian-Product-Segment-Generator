@@ -4,6 +4,7 @@ import {
     MapaKokpit,
     MapaCelownik,
     MapaLogika,
+    MapaWarstwyZiemi,
 } from "../element/mapa.slint";
 import { OknoSzkielet, OknoGuzik } from "../element/okno.slint";
 import { LineEdit } from "std-widgets.slint";
@@ -61,8 +62,8 @@ export component AppGenetekaZakres inherits OknoSzkielet {
             MapaKokpit {
                 anchor: "sw";
                 margin: 10px;
-                x: (self.anchor == "nw" || self.anchor == "sw") ? self.margin : parent.width - self.preferred-width - self.margin;
-                y: (self.anchor == "nw" || self.anchor == "ne") ? self.margin : parent.height - self.preferred-height - self.margin;
+                x: (self.anchor == "nw" || self.anchor == "sw") ? self.margin : parent.width - self.width - self.margin;
+                y: (self.anchor == "nw" || self.anchor == "ne") ? self.margin : parent.height - self.height - self.margin;
                 zoom_in => {
                     kanwa.zoom_around_center(kanwa.map_zoom * 1.15);
                 }
@@ -85,6 +86,15 @@ export component AppGenetekaZakres inherits OknoSzkielet {
                     kanwa.map_offset_x = 0px;
                     kanwa.map_offset_y = 0px;
                     kanwa.map_rotation = 0deg;
+                    kanwa.trigger_render();
+                }
+            }
+
+            MapaWarstwyZiemi {
+                margin: 10px;
+                x: parent.width - self.width - self.margin;
+                y: parent.height - self.height - self.margin;
+                warstwy_zmienione => {
                     kanwa.trigger_render();
                 }
             }

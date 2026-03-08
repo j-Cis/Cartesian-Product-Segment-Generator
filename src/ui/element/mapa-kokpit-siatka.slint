@@ -77,11 +77,12 @@ export component MapaKokpitSiatka inherits GridLayout {
 
         VerticalLayout {
             spacing: 5px;
+            alignment: center;
 
             // GÓRNY MAŁY GUZIK - Reset 
             MapaKokpitGuzik {
                 height: 15px;
-                icon_commands: "M 6 6 L 17 6 L 17 17 L 6 17 Z";
+                icon_commands: "M 6 2 L 17 2 L 17 8 L 6 8 Z";
                 is_filled: true;
                 clicked => {
                     root.reset();
