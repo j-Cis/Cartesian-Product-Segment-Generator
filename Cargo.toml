@@ -1,6 +1,6 @@
 [package]
 name = "fifakom-genealogia"
-version = "0.1.4"
+version = "0.1.5"
 readme = "README.md"
 repository = "https://github.com/j-Cis/fifakom-genealogia"
 description = "Zestaw narzędzi i sztuczek pomocnych zaawansowanym genealogom."
@@ -39,6 +39,8 @@ serde = { version = "1.0.228", features = ["derive"] } # Potężny framework do 
 serde_json = "1.0.149"  # Narzędzie do konwersji naszych struktur w Rusta na pliki JSON i odwrotnie
 roxmltree = "0.21.1"    # Ultraszybki parser drzewa XML – używany do czytania tagów z map KML
 scraper = "0.25.0"      # Parser HTML z obsługą selektorów CSS (wyciąganie danych prosto z tabel na stronie WWW)
+
+# ---- INNE NARZĘDZIA ----
 toml = "1.0.6"
 tiny-skia = "0.12.0"
 geojson = "0.24.2"
@@ -53,22 +55,26 @@ name = "fifak_lib"
 path = "src/lib/mod.rs" # Wskazuje, gdzie znajduje się główne "jądro" Twojej aplikacji (biblioteka wewnętrzna)
 
 # KONFIGURACJA PLIKÓW WYKONYWALNYCH (Pojedyncze programy bazujące na fifak_lib)
-[[bin]]
-name = "gen_pk"                     # Generator Produkcji Kart (Konsola)
-path = "src/bin/genpk_cli.rs" 
 
 [[bin]]
-name = "GenProdKart"                # Generator Produkcji Kart (GUI)
-path = "src/bin/genpk_gui.rs" 
+name = "PobieraczGenetekaZakresMapaGET"  
+path = "src/bin/batch/pobieracz_geneteka_zakres_mapa__get.rs"
 
 [[bin]]
-name = "GenetekaPobierzZakresMapa"  # Pobieracz KML z Google Maps (Konsola)
-path = "src/bin/geneteka_zakres_mapa_cli.rs"
+name = "PobieraczGenetekaZakresHtmlGET"  
+path = "src/bin/batch/pobieracz_geneteka_zakres_html__get.rs"
+[[bin]]
+name = "AppKartezjanProduktCLI"                    
+path = "src/bin/cli/app_kartezjan_produkt__cli.rs" 
 
 [[bin]]
-name = "GenetekaPobierzZakresHtml"  # Pobieracz rejestrów HTML z Geneteki (Konsola)
-path = "src/bin/geneteka_zakres_html_cli.rs"
+name = "AppKartezjanProduktTUI"                    
+path = "src/bin/tui/app_kartezjan_produkt__tui.rs" 
 
 [[bin]]
-name = "GenetekaCoJest"  # 
-path = "src/bin/geneteka_co_jest_gui.rs"
+name = "AppKartezjanProduktGUI"                
+path = "src/bin/gui/app_kartezjan_produkt__gui.rs"
+
+[[bin]]
+name = "AppGenetekaZakresGUI"  
+path = "src/bin/gui/app_geneteka_zakres__gui.rs"

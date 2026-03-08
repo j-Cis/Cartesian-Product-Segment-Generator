@@ -1,0 +1,64 @@
+import { Kolory } from "../theme/kolory.slint";
+import { OknoGuzik } from "okno-guzik.slint";
+import { OknoLogika } from "okno-logika.slint";
+
+
+export component OknoPasek inherits Rectangle {
+    in property <string> window-title: "TYTUŁ OKNA";
+    height: 50px;
+    background: Kolory.window-backgr-bar;
+    TouchArea {
+        width: 100%;
+        height: 100%;
+        pointer-event(event) => {
+            if (event.kind == PointerEventKind.down && event.button == PointerEventButton.left) {
+                OknoLogika.przesuwanie(0px, 0px);
+            }
+        }
+    }
+
+    HorizontalLayout {
+        padding-left: 15px;
+        padding-right: 15px;
+        spacing: 10px;
+        Text {
+            text: root.window-title;
+            color: Kolory.window-text-main;
+            vertical-alignment: center;
+            font-weight: 700;
+        }
+
+        Rectangle {
+            horizontal-stretch: 1;
+        }
+
+        OknoGuzik {
+            text: "\u{f00d}";
+            width: 35px;
+            height: 35px;
+            custom-hover-bg: #ff000033;
+            clicked => {
+                OknoLogika.zamykanie();
+            }
+        }
+
+        OknoGuzik {
+            text: "—";
+            width: 35px;
+            height: 35px;
+            custom-hover-bg: #00a2ff33;
+            clicked => {
+                OknoLogika.ukrywanie();
+            }
+        }
+
+        OknoGuzik {
+            text: Kolory.is-dark ? "☀️" : "🌙";
+            width: 40px;
+            height: 35px;
+            clicked => {
+                Kolory.is-dark = !Kolory.is-dark;
+            }
+        }
+    }
+}

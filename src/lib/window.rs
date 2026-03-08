@@ -61,36 +61,37 @@ pub fn window_resize(window: &Window, direction: SharedString) {
 
 #[macro_export]
 macro_rules! setup_window_ctrl_bindings {
-    ($ui:expr) => {
+    ($ui:expr, $ui_type:ty) => {
         // Wyciągamy globalny kontroler z podanego UI
-        let ctrl = $ui.global::<WindowCtrl>();
+        let logika = $ui.global::<OknoLogika>();
 
-        ctrl.on_window_quit(|| {
+        logika.on_zamykanie(|| {
             let _ = slint::quit_event_loop();
         });
 
-        let ui_weak_min = $ui.as_weak();
-        ctrl.on_window_minimize(move || {
+        // Wymuszamy na kompilatorze konkretny typ Weak<$ui_type>
+        let ui_weak_min: slint::Weak<$ui_type> = slint::ComponentHandle::as_weak(&$ui);
+        logika.on_ukrywanie(move || {
             if let Some(ui) = ui_weak_min.upgrade() {
-                ui.window().set_minimized(true);
+                slint::ComponentHandle::window(&ui).set_minimized(true);
             }
         });
 
-        let ui_weak_move = $ui.as_weak();
-        ctrl.on_window_move(move |dx, dy| {
+        let ui_weak_move: slint::Weak<$ui_type> = slint::ComponentHandle::as_weak(&$ui);
+        logika.on_przesuwanie(move |dx, dy| {
             if let Some(ui) = ui_weak_move.upgrade() {
                 if dx == 0.0 && dy == 0.0 {
-                    window::start_drag(ui.window());
+                    $crate::window::start_drag(slint::ComponentHandle::window(&ui));
                 } else {
-                    window::window_move(ui.window(), dx, dy);
+                    $crate::window::window_move(slint::ComponentHandle::window(&ui), dx, dy);
                 }
             }
         });
 
-        let ui_weak_resize = $ui.as_weak();
-        ctrl.on_window_resize(move |direction| {
+        let ui_weak_resize: slint::Weak<$ui_type> = slint::ComponentHandle::as_weak(&$ui);
+        logika.on_wymiarowanie(move |direction| {
             if let Some(ui) = ui_weak_resize.upgrade() {
-                window::window_resize(ui.window(), direction);
+                $crate::window::window_resize(slint::ComponentHandle::window(&ui), direction);
             }
         });
     };

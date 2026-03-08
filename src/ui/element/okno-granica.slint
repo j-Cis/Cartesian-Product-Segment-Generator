@@ -1,0 +1,106 @@
+export component OknoGranica inherits Rectangle {
+    callback resize(string);
+    background: transparent;
+    width: 100%;
+    height: 100%;
+    property <length> border-size: 8px;
+    TouchArea {
+        width: 100%;
+        height: border-size;
+        y: 0;
+        mouse-cursor: MouseCursor.row-resize;
+        pointer-event(e) => {
+            if (e.button == PointerEventButton.left && e.kind == PointerEventKind.down) {
+                root.resize("n");
+            }
+        }
+    }
+
+    TouchArea {
+        width: 100%;
+        height: border-size;
+        y: parent.height - self.height;
+        mouse-cursor: MouseCursor.row-resize;
+        pointer-event(e) => {
+            if (e.button == PointerEventButton.left && e.kind == PointerEventKind.down) {
+                root.resize("s");
+            }
+        }
+    }
+
+    TouchArea {
+        width: border-size;
+        height: 100%;
+        x: 0;
+        mouse-cursor: MouseCursor.col-resize;
+        pointer-event(e) => {
+            if (e.button == PointerEventButton.left && e.kind == PointerEventKind.down) {
+                root.resize("w");
+            }
+        }
+    }
+
+    TouchArea {
+        width: border-size;
+        height: 100%;
+        x: parent.width - self.width;
+        mouse-cursor: MouseCursor.col-resize;
+        pointer-event(e) => {
+            if (e.button == PointerEventButton.left && e.kind == PointerEventKind.down) {
+                root.resize("e");
+            }
+        }
+    }
+
+    TouchArea {
+        x: 0;
+        y: 0;
+        width: border-size * 2;
+        height: border-size * 2;
+        mouse-cursor: MouseCursor.nwse-resize;
+        pointer-event(e) => {
+            if (e.button == PointerEventButton.left && e.kind == PointerEventKind.down) {
+                root.resize("nw");
+            }
+        }
+    }
+
+    TouchArea {
+        x: parent.width - self.width;
+        y: 0;
+        width: border-size * 2;
+        height: border-size * 2;
+        mouse-cursor: MouseCursor.nesw-resize;
+        pointer-event(e) => {
+            if (e.button == PointerEventButton.left && e.kind == PointerEventKind.down) {
+                root.resize("ne");
+            }
+        }
+    }
+
+    TouchArea {
+        x: 0;
+        y: parent.height - self.height;
+        width: border-size * 2;
+        height: border-size * 2;
+        mouse-cursor: MouseCursor.nesw-resize;
+        pointer-event(e) => {
+            if (e.button == PointerEventButton.left && e.kind == PointerEventKind.down) {
+                root.resize("sw");
+            }
+        }
+    }
+
+    TouchArea {
+        x: parent.width - self.width;
+        y: parent.height - self.height;
+        width: border-size * 2;
+        height: border-size * 2;
+        mouse-cursor: MouseCursor.nwse-resize;
+        pointer-event(e) => {
+            if (e.button == PointerEventButton.left && e.kind == PointerEventKind.down) {
+                root.resize("se");
+            }
+        }
+    }
+}

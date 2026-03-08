@@ -1,0 +1,33 @@
+import { Kolory } from "../theme/kolory.slint";
+
+export component OknoGuzik {
+    in property <string> text;
+    in property <bool> enabled: true;
+    in property <bool> primary: false;
+    in property <brush> custom-hover-bg: Kolory.hover-background;
+    callback clicked;
+    Rectangle {
+        background: root.primary ? #00a2ff : (ta.has-hover ? root.custom-hover-bg : (root.enabled ? Kolory.background-light : Kolory.background));
+        border-width: 1px;
+        border-color: Kolory.border;
+        border-radius: 4px;
+        height: 100%;
+        width: 100%;
+        Text {
+            text: root.text;
+            color: !root.enabled ? Kolory.text-secondary : (root.primary ? white : Kolory.text-primary);
+            font-weight: 700;
+            vertical-alignment: center;
+            horizontal-alignment: center;
+            font-family: "BlexMono Nerd Font";
+        }
+
+        ta := TouchArea {
+            enabled: root.enabled;
+            clicked => {
+                root.clicked();
+            }
+            mouse-cursor: self.has-hover ? pointer : default;
+        }
+    }
+}

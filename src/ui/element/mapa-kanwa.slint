@@ -1,0 +1,87 @@
+import { Kolory } from "../theme/kolory.slint";
+import { MapaKanwaLogika, MapaKameraStan } from "mapa-kanwa-logika.slint";
+
+export component MapaKanwa inherits Rectangle {
+    in property <image> map_frame;
+    in-out property <float> map_zoom: 1.0;
+    in-out property <length> map_offset_x: 0px;
+    in-out property <length> map_offset_y: 0px;
+    in-out property <angle> map_rotation: 0deg;
+    callback camera_changed(float, float, float, float, float, float);
+    horizontal-stretch: 1;
+    background: Kolory.background-light;
+    border-radius: 4px;
+    border-width: 1px;
+    border-color: Kolory.accent-success;
+    clip: true;
+    public function trigger_render() {
+        root.camera_changed(
+            root.width / 1px, root.height / 1px,
+            root.map_offset_x / 1px, root.map_offset_y / 1px,
+            root.map_zoom, root.map_rotation / 1deg);
+    }
+    // Wywołanie zewnętrznej logiki
+    public function rotate_view(d_angle: angle) {
+        let stan = MapaKanwaLogika.oblicz_obrot(
+            root.width, root.height, 
+            root.map_offset_x, root.map_offset_y, 
+            root.map_zoom, root.map_rotation, d_angle);
+        root.map_offset_x = stan.offset_x;
+        root.map_offset_y = stan.offset_y;
+        root.map_rotation = stan.rotation;
+        root.trigger_render();
+    }
+
+    // Wywołanie zewnętrznej logiki
+    public function zoom_around_center(new_zoom: float) {
+        let stan = MapaKanwaLogika.oblicz_zoom(
+            root.width, root.height, 
+            root.map_offset_x, root.map_offset_y, 
+            root.map_zoom, new_zoom, root.map_rotation);
+        root.map_offset_x = stan.offset_x;
+        root.map_offset_y = stan.offset_y;
+        root.map_zoom = stan.zoom;
+        root.trigger_render();
+    }
+    TouchArea {
+        width: 100%;
+        height: 100%;
+        property <length> start_x;
+        property <length> start_y;
+        pointer-event(event) => {
+            if (event.kind == PointerEventKind.down) {
+                self.start_x = root.map_offset_x;
+                self.start_y = root.map_offset_y;
+            }
+        }
+        moved => {
+            root.map_offset_x = self.start_x + (self.mouse-x - self.pressed-x);
+            root.map_offset_y = self.start_y + (self.mouse-y - self.pressed-y);
+            root.trigger_render();
+        }
+        scroll-event(event) => {
+            if (event.delta-y > 0px) {
+                root.zoom_around_center(root.map_zoom - 0.2);
+            }
+            if (event.delta-y < 0px) {
+                root.zoom_around_center(root.map_zoom + 0.2);
+            }
+            return accept;
+        }
+    }
+
+    Image {
+        width: 100%;
+        height: 100%;
+        source: root.map_frame;
+        image-fit: fill;
+    }
+
+    changed width => {
+        root.trigger_render();
+    }
+    changed height => {
+        root.trigger_render();
+    }
+    @children
+}

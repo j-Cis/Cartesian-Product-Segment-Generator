@@ -1,0 +1,112 @@
+import { MapaKokpitGuzik } from "mapa-kokpit-guzik.slint";
+
+export component MapaKokpitSiatka inherits GridLayout {
+    padding: 0px;
+    spacing: 5px;
+    in property <string> anchor: "sw";
+    in property <length> margin: 10px;
+    in-out property <bool> keyboard_active: false;
+    callback zoom_in();
+    callback zoom_out();
+    callback pan(length, length);
+    callback reset();
+    callback rotate_ccw();
+    callback rotate_cw();
+    callback toggle_keyboard();
+    // RZĄD 1 (Q, W, E)
+    Row {
+        MapaKokpitGuzik {
+            icon_commands: "M 10 5 L 12 5 L 12 10 L 17 10 L 17 12 L 12 12 L 12 17 L 10 17 L 10 12 L 5 12 L 5 10 L 10 10 Z";
+            is_filled: true;
+            clicked => {
+                root.zoom_in();
+            }
+        }
+
+        MapaKokpitGuzik {
+            icon_commands: "M 11 6 L 17 14 L 5 14 Z";
+            is_filled: true;
+            clicked => {
+                root.pan(0px, 100px);
+            }
+        }
+
+        MapaKokpitGuzik {
+            icon_commands: "M 5 12 L 17 12 L 17 10 L 5 10 Z";
+            is_filled: true;
+            clicked => {
+                root.zoom_out();
+            }
+        }
+    }
+    // RZĄD 2 (A, S, D)
+    Row {
+        MapaKokpitGuzik {
+            icon_commands: "M 6 12 L 14 6 L 14 18 Z";
+            is_filled: true;
+            clicked => {
+                root.pan(100px, 0px);
+            }
+        }
+
+        MapaKokpitGuzik {
+            icon_commands: "M 11 18 L 17 10 L 5 10 Z";
+            is_filled: true;
+            clicked => {
+                root.pan(0px, -100px);
+            }
+        }
+
+        MapaKokpitGuzik {
+            icon_commands: "M 16 12 L 8 6 L 8 18 Z";
+            is_filled: true;
+            clicked => {
+                root.pan(-100px, 0px);
+            }
+        }
+    }
+    // RZĄD 3 (Z, X, C)
+    Row {
+        MapaKokpitGuzik {
+            icon_commands: "M11,1 L5,6 L11,11 L11,8 A4,4 0 1,1 7,12 L3,12 A8,8 0 1,0 11,4 Z";
+            is_filled: true;
+            clicked => {
+                root.rotate_ccw();
+            }
+        }
+
+        VerticalLayout {
+            spacing: 5px;
+
+            // GÓRNY MAŁY GUZIK - Reset 
+            MapaKokpitGuzik {
+                height: 15px;
+                icon_commands: "M 6 6 L 17 6 L 17 17 L 6 17 Z";
+                is_filled: true;
+                clicked => {
+                    root.reset();
+                }
+            }
+
+            // DOLNY MAŁY GUZIK - Toggle Klawiatury
+            MapaKokpitGuzik {
+                height: 15px;
+                icon_commands: "";
+                is_filled: true;
+                is_active: root.keyboard_active;
+                clicked => {
+                    // Wywołujemy callback zamiast samemu łapać focus!
+                    root.toggle_keyboard();
+                }
+            }
+        }
+
+        MapaKokpitGuzik {
+            icon_commands: "M11,1 L17,6 L11,11 L11,8 A4,4 0 1,0 15,12 L19,12 A8,8 0 1,1 11,4 Z";
+            is_filled: true;
+            clicked => {
+                root.rotate_cw();
+            }
+        }
+    }
+}

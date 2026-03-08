@@ -1,0 +1,56 @@
+// Struktura przechowująca "stan" kamery po przeliczeniu
+export struct MapaKameraStan {
+    offset_x: length,
+    offset_y: length,
+    zoom: float,
+    rotation: angle,
+}
+
+export global MapaKanwaLogika {
+    // CZYSTA FUNKCJA: Obliczanie nowego stanu po obrocie
+    public pure function oblicz_obrot(w: length, h: length, ox: length, oy: length, z: float, r: angle, d_angle: angle) -> MapaKameraStan {
+        let view_center_x = w / 2;
+        let view_center_y = h / 2;
+        let target_x = view_center_x - ox;
+        let target_y = view_center_y - oy;
+        let pivot_x = (w * z) / 2;
+        let pivot_y = (h * z) / 2;
+        let dx = target_x - pivot_x;
+        let dy = target_y - pivot_y;
+        let unrot_cos = Math.cos(-r);
+        let unrot_sin = Math.sin(-r);
+        let orig_dx = dx * unrot_cos - dy * unrot_sin;
+        let orig_dy = dx * unrot_sin + dy * unrot_cos;
+        let new_r = r + d_angle;
+        let new_cos = Math.cos(new_r);
+        let new_sin = Math.sin(new_r);
+        let new_dx = orig_dx * new_cos - orig_dy * new_sin;
+        let new_dy = orig_dx * new_sin + orig_dy * new_cos;
+        let new_target_x = pivot_x + new_dx;
+        let new_target_y = pivot_y + new_dy;
+        return {
+            offset_x: view_center_x - new_target_x,
+            offset_y: view_center_y - new_target_y,
+            zoom: z,
+            rotation: new_r
+        };
+    }
+
+    // CZYSTA FUNKCJA: Obliczanie nowego stanu po powiększeniu
+    public pure function oblicz_zoom(w: length, h: length, ox: length, oy: length, old_zoom: float, new_zoom: float, rot: angle) -> MapaKameraStan {
+        if (new_zoom <= 0) {
+            return { offset_x: ox, offset_y: oy, zoom: old_zoom, rotation: rot };
+        }
+        let visual_center_x = w / 2;
+        let visual_center_y = h / 2;
+        let s = new_zoom / old_zoom;
+        let new_center_inner_x = (visual_center_x - ox) * s;
+        let new_center_inner_y = (visual_center_y - oy) * s;
+        return {
+            offset_x: visual_center_x - new_center_inner_x,
+            offset_y: visual_center_y - new_center_inner_y,
+            zoom: new_zoom,
+            rotation: rot
+        };
+    }
+}

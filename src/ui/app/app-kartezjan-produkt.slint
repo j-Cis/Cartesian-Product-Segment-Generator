@@ -1,18 +1,11 @@
-import { Palette } from "../theme/globals.slint";
-import {
-    WindowShell,
-    WindowCtrl,
-    CustomBtn,
-} from "../components/window-shell.slint";
+import { Kolory } from "../theme/kolory.slint";
+import { OknoSzkielet, OknoGuzik } from "../element/okno.slint";
 import { LineEdit, ScrollView } from "std-widgets.slint";
 
-
-export component GenpkWindow inherits WindowShell {
+export component AppKartezjanProdukt inherits OknoSzkielet {
     preferred-width: 600px;
     preferred-height: 300px;
     window-title: "CPSGen - FORMATOWANIE";
-    
-    // Właściwości i callbacki dla Rusta
     in-out property <[string]> results: [];
     in-out property <string> joined_text: "";
     in-out property <bool> show_as_list: true;
@@ -33,7 +26,7 @@ export component GenpkWindow inherits WindowShell {
         HorizontalLayout {
             spacing: 10px;
             height: 35px;
-            CustomBtn {
+            OknoGuzik {
                 text: "LISTA";
                 enabled: !root.show_as_list;
                 clicked => {
@@ -41,7 +34,7 @@ export component GenpkWindow inherits WindowShell {
                 }
             }
 
-            CustomBtn {
+            OknoGuzik {
                 text: "TEKST";
                 enabled: root.show_as_list;
                 clicked => {
@@ -50,7 +43,7 @@ export component GenpkWindow inherits WindowShell {
             }
         }
 
-        CustomBtn {
+        OknoGuzik {
             text: "GENERUJ";
             height: 40px;
             primary: true;
@@ -60,7 +53,7 @@ export component GenpkWindow inherits WindowShell {
         }
 
         Rectangle {
-            background: Palette.background-light;
+            background: Kolory.background-light;
             border-radius: 4px;
             vertical-stretch: 1;
             clip: true;
@@ -71,21 +64,21 @@ export component GenpkWindow inherits WindowShell {
                     spacing: 5px;
                     for res in root.results: Text {
                         text: res;
-                        color: Palette.accent-success;
+                        color: Kolory.accent-success;
                     }
                 }
                 if (!root.show_as_list): VerticalLayout {
                     padding: 10px;
                     Text {
                         text: root.joined_text;
-                        color: Palette.accent-success;
+                        color: Kolory.accent-success;
                         wrap: word-wrap;
                     }
                 }
             }
         }
 
-        CustomBtn {
+        OknoGuzik {
             text: "KOPIUJ WYNIKI";
             clicked => {
                 root.copy_to_clipboard(root.show_as_list ? "list" : "text");

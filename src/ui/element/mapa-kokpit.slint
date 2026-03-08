@@ -1,0 +1,89 @@
+import { MapaKokpitGuzik } from "mapa-kokpit-guzik.slint";
+import { MapaKokpitSiatka } from "mapa-kokpit-siatka.slint";
+
+export component MapaKokpit inherits FocusScope {
+    // padding: 0px;
+    in property <string> anchor: "sw";
+    in property <length> margin: 10px;
+    in-out property <bool> keyboard_active: false;
+    // Rozmiar dopasowany do GridLayoutu w środku
+    width: grid.preferred-width;
+    height: grid.preferred-height;
+    callback zoom_in();
+    callback zoom_out();
+    callback pan(length, length);
+    callback reset();
+    callback rotate_ccw();
+    callback rotate_cw();
+
+
+    // NASŁUCHIWANIE KLAWISZY (QWE / ASD / ZXC)
+    key-pressed(event) => {
+        if (!root.keyboard_active) {
+            return reject;
+        }
+        
+        // Rząd górny (Q W E)
+        if (event.text == "q" || event.text == "Q") {
+            root.zoom_in();
+            return accept;
+        }
+        if (event.text == "w" || event.text == "W") {
+            root.pan(0px, 100px);
+            return accept;
+        }
+        if (event.text == "e" || event.text == "E") {
+            root.zoom_out();
+            return accept;
+        }
+        
+        // Rząd środkowy (A S D)
+        if (event.text == "a" || event.text == "A") {
+            root.pan(100px, 0px);
+            return accept;
+        }
+        if (event.text == "s" || event.text == "S") {
+            root.pan(0px, -100px);
+            return accept;
+        }
+        if (event.text == "d" || event.text == "D") {
+            root.pan(-100px, 0px);
+            return accept;
+        }
+        
+        // Rząd dolny (Z X C)
+        if (event.text == "z" || event.text == "Z") {
+            root.rotate_ccw();
+            return accept;
+        }
+        // Klawisz X służy u nas jako włącznik/wyłącznik
+        if (event.text == "x" || event.text == "X") {
+            root.keyboard_active = false;
+            return accept;
+        }
+        if (event.text == "c" || event.text == "C") {
+            root.rotate_cw();
+            return accept;
+        }
+        return reject;
+    }
+    grid := MapaKokpitSiatka {
+        anchor: root.anchor;
+        margin: root.margin;
+        keyboard_active: root.keyboard_active;
+        // Gdy siatka każe nam przełączyć klawiaturę (kliknięto dolny guzik)
+        toggle_keyboard => {
+            root.keyboard_active = !root.keyboard_active;
+            if (root.keyboard_active) {
+                // FocusScope "skupia uwagę"
+                root.focus();
+            }
+        }
+        zoom_in => root.zoom_in();
+        zoom_out => root.zoom_out();
+        pan(length, length) => root.pan(length, length);
+        reset => root.reset();
+        rotate_ccw => root.rotate_ccw();
+        rotate_cw => root.rotate_cw();
+    }
+}

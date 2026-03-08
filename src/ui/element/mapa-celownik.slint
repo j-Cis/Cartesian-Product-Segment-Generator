@@ -1,0 +1,39 @@
+import { Kolory } from "../theme/kolory.slint";
+
+export component MapaCelownik inherits Rectangle {
+    in property <string> n_coord: "0.0000°";
+    in property <string> e_coord: "0.0000°";
+    in property <string> zoom_str: "1.0x";
+    in property <string> rot_str: "0°";
+    in property <string> anchor: "ne";
+    in property <length> margin: 10px;
+    Rectangle {
+        width: 20px;
+        height: 20px;
+        x: (parent.width - self.width) / 2;
+        y: (parent.height - self.height) / 2;
+        Path {
+            commands: "M 10 0 L 10 20 M 0 10 L 20 10";
+            stroke: Kolory.accent-success.with-alpha(0.3);
+            stroke-width: 1px;
+        }
+    }
+
+    Rectangle {
+        x: (root.anchor == "nw" || root.anchor == "sw") ? root.margin : parent.width - self.width - root.margin;
+        y: (root.anchor == "nw" || root.anchor == "ne") ? root.margin : parent.height - self.height - root.margin;
+        background: Kolory.background-light.with-alpha(0.7);
+        border-radius: 4px;
+        width: coords_layout.preferred-width + 10px;
+        height: coords_layout.preferred-height + 10px;
+        coords_layout := VerticalLayout {
+            padding: 5px;
+            Text {
+                text: root.n_coord + " | " + root.e_coord + " | R: " + root.rot_str + " | Z: " + root.zoom_str;
+                color: Kolory.accent-success;
+                font-family: "Fira Code";
+                font-size: 14px;
+            }
+        }
+    }
+}

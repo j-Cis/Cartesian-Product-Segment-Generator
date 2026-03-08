@@ -1,0 +1,93 @@
+import { Kolory } from "../theme/kolory.slint";
+import {
+    MapaKanwa,
+    MapaKokpit,
+    MapaCelownik,
+    MapaLogika,
+} from "../element/mapa.slint";
+import { OknoSzkielet, OknoGuzik } from "../element/okno.slint";
+import { LineEdit } from "std-widgets.slint";
+
+export component AppGenetekaZakres inherits OknoSzkielet {
+    preferred-width: 1600px;
+    preferred-height: 1000px;
+    window-title: "GENETEKA - CO JEST?";
+    callback search(string);
+    in property <image> map_frame;
+    callback camera_changed(float, float, float, float, float, float);
+    in-out property <[string]> search_results: [];
+    in property <float> geo_min_lon;
+    in property <float> geo_max_lon;
+    in property <float> geo_min_lat;
+    in property <float> geo_max_lat;
+    VerticalLayout {
+        padding: 20px;
+        spacing: 15px;
+        HorizontalLayout {
+            spacing: 10px;
+            height: 40px;
+            input := LineEdit {
+                placeholder-text: "Szukaj parafii...";
+                accepted => {
+                    root.search(self.text);
+                }
+            }
+
+            OknoGuzik {
+                text: "SZUKAJ";
+                width: 100px;
+                primary: true;
+                clicked => {
+                    root.search(input.text);
+                }
+            }
+        }
+
+        kanwa := MapaKanwa {
+            map_frame: root.map_frame;
+            camera_changed(w, h, ox, oy, z, rot) => {
+                root.camera_changed(w, h, ox, oy, z, rot);
+            }
+            MapaCelownik {
+                width: 100%;
+                height: 100%;
+                n_coord: MapaLogika.current_lat(kanwa.width, kanwa.height, kanwa.map_offset_x, kanwa.map_offset_y, kanwa.map_zoom, kanwa.map_rotation, root.geo_min_lat, root.geo_max_lat);
+                e_coord: MapaLogika.current_lon(kanwa.width, kanwa.height, kanwa.map_offset_x, kanwa.map_offset_y, kanwa.map_zoom, kanwa.map_rotation, root.geo_min_lon, root.geo_max_lon);
+                zoom_str: MapaLogika.current_zoom(kanwa.map_zoom);
+                rot_str: MapaLogika.current_rot(kanwa.map_rotation);
+                anchor: "ne";
+            }
+
+            MapaKokpit {
+                anchor: "sw";
+                margin: 10px;
+                x: (self.anchor == "nw" || self.anchor == "sw") ? self.margin : parent.width - self.preferred-width - self.margin;
+                y: (self.anchor == "nw" || self.anchor == "ne") ? self.margin : parent.height - self.preferred-height - self.margin;
+                zoom_in => {
+                    kanwa.zoom_around_center(kanwa.map_zoom * 1.15);
+                }
+                zoom_out => {
+                    kanwa.zoom_around_center(kanwa.map_zoom / 1.15);
+                }
+                rotate_ccw => {
+                    kanwa.rotate_view(-5deg);
+                }
+                rotate_cw => {
+                    kanwa.rotate_view(5deg);
+                }
+                pan(dx, dy) => {
+                    kanwa.map_offset_x += dx;
+                    kanwa.map_offset_y += dy;
+                    kanwa.trigger_render();
+                }
+                reset => {
+                    kanwa.map_zoom = 1.0;
+                    kanwa.map_offset_x = 0px;
+                    kanwa.map_offset_y = 0px;
+                    kanwa.map_rotation = 0deg;
+                    kanwa.trigger_render();
+                }
+            }
+        }
+    }
+}

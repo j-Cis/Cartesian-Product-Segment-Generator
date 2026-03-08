@@ -10,8 +10,8 @@ use slint::{ComponentHandle, Model, ModelRc, SharedString, VecModel};
 slint::include_modules!();
 
 fn main() -> Result<()> {
-    let ui= GenpkWindow::new()?; 
-    setup_window_ctrl_bindings!(ui);
+    let ui= AppKartezjanProdukt::new()?; 
+    setup_window_ctrl_bindings!(ui, AppKartezjanProdukt);
 
     // 1. Generowanie
     let ui_weak_send = ui.as_weak();

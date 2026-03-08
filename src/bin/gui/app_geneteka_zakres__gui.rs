@@ -22,8 +22,8 @@ fn main() -> Result<()> {
 
     println!("Wczytano {} parafii!", baza.rekord.len());
 
-    let ui= GenetekaCoJestWindow::new()?;
-    setup_window_ctrl_bindings!(ui);
+    let ui= AppGenetekaZakres::new()?;
+    setup_window_ctrl_bindings!(ui, AppGenetekaZakres);
 
     // ==========================================
     // LOGIKA MAPY -> przeniesiona do biblioteki atlas!

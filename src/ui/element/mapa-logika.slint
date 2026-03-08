@@ -1,0 +1,53 @@
+export global MapaLogika {
+    // Obliczanie szerokości geograficznej (N/S)
+    public pure function current_lat(w: length, h: length, ox: length, oy: length, z: float, rot: angle, min_lat: float, max_lat: float) -> string {
+        let view_center_x = w / 2;
+        let view_center_y = h / 2;
+        let target_x = view_center_x - ox;
+        let target_y = view_center_y - oy;
+        let pivot_x = w * z / 2;
+        let pivot_y = h * z / 2;
+        let dx = target_x - pivot_x;
+        let dy = target_y - pivot_y;
+        let cos_a = Math.cos(-rot);
+        let sin_a = Math.sin(-rot);
+        let orig_y = pivot_y + dx * sin_a + dy * cos_a;
+        let ratio = orig_y / (h * z);
+        let val = max_lat - (ratio * (max_lat - min_lat));
+        let prefix = val >= 0 ? "N:" : "S:";
+        let val_abs = Math.abs(val);
+        return prefix + " " + Math.round(val_abs * 10000) / 10000 + "°";
+    }
+
+    // Obliczanie długości geograficznej (E/W)
+    public pure function current_lon(w: length, h: length, ox: length, oy: length, z: float, rot: angle, min_lon: float, max_lon: float) -> string {
+        let view_center_x = w / 2;
+        let view_center_y = h / 2;
+        let target_x = view_center_x - ox;
+        let target_y = view_center_y - oy;
+        let pivot_x = w * z / 2;
+        let pivot_y = h * z / 2;
+        let dx = target_x - pivot_x;
+        let dy = target_y - pivot_y;
+        let cos_a = Math.cos(-rot);
+        let sin_a = Math.sin(-rot);
+        let orig_x = pivot_x + dx * cos_a - dy * sin_a;
+        let ratio = orig_x / (w * z);
+        let val = min_lon + (ratio * (max_lon - min_lon));
+        let prefix = val >= 0 ? "E:" : "W:";
+        let val_abs = Math.abs(val);
+        return prefix + " " + Math.round(val_abs * 10000) / 10000 + "°";
+    }
+
+    // Formatowanie kąta obrotu
+    public pure function current_rot(rot: angle) -> string {
+        let deg = Math.mod(rot / 1deg, 360);
+        let final_deg = deg < 0 ? deg + 360 : deg;
+        return Math.round(final_deg) + "°";
+    }
+
+    // Formatowanie poziomu powiększenia
+    public pure function current_zoom(z: float) -> string {
+        return (Math.round(z * 100) / 100) + "x";
+    }
+}

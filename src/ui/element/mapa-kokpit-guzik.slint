@@ -1,0 +1,30 @@
+import { Kolory } from "../theme/kolory.slint";
+
+export component MapaKokpitGuzik inherits Rectangle {
+    in property <string> icon_commands;
+    in property <bool> is_filled: false;
+    in property <bool> is_active: false;
+    callback clicked();
+    width: 35px;
+    height: 35px;
+    background: root.is_active ? Kolory.accent-success.with-alpha(0.3) : (ta.pressed ? Kolory.accent-success.darker(0.2) : (ta.has-hover ? Kolory.background-light.brighter(0.1) : Kolory.background-light));
+    border-radius: 4px;
+    border-width: 1px;
+    border-color: Kolory.accent-success;
+    Path {
+        width: 24px;
+        height: 24px;
+        x: (parent.width - self.width) / 2;
+        y: (parent.height - self.height) / 2;
+        commands: root.icon_commands;
+        stroke: root.is_filled ? transparent : Kolory.text-primary;
+        fill: root.is_filled ? Kolory.text-primary : transparent;
+        stroke-width: root.is_filled ? 0px : 2px;
+    }
+
+    ta := TouchArea {
+        clicked => {
+            root.clicked();
+        }
+    }
+}
